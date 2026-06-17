@@ -6,18 +6,20 @@ import os
 from flask import Flask
 from threading import Thread
 
-# Configuração Keep-Alive
+# 🌐 Configuração do Keep-Alive para o Render
 app = Flask('')
 @app.route('/')
 def home(): return "Bot Online 24/7!"
-def run(): app.run(host='0.0.0.0', port=8080)
+def run(): app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
 Thread(target=run, daemon=True).start()
 
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True # Necessário para encontrar membros e canais
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 fila_fazenda = []
+fila_ids = []
 
 class PainelFilaView(View):
     def __init__(self):
@@ -41,40 +43,50 @@ class PainelFilaView(View):
         return embed
 
     async def atualizar(self, interaction: discord.Interaction):
-        # Edita a mensagem do painel
+        # Atualiza a mensagem e força o ping de notificação
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
-        
-        # Envia um ping fantasma para garantir a notificação
         ping = await interaction.channel.send("||@here||")
         await asyncio.sleep(0.5)
         await ping.delete()
 
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
-        usuario = interaction.user.display_name
-        if usuario in fila_fazenda:
-            await interaction.response.send_message(f"⚠️ Você já está na fila, {usuario}!", ephemeral=True)
-        else:
-            fila_fazenda.append(usuario)
+        if interaction.user.id not in fila_ids:
+            fila_fazenda.append(interaction.user.display_name)
+            fila_ids.append(interaction.user.id)
             await self.atualizar(interaction)
+        else:
+            await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
 
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila")
     async def sair(self, interaction: discord.Interaction, button: Button):
-        usuario = interaction.user.display_name
-        if usuario in fila_fazenda:
-            fila_fazenda.remove(usuario)
+        if interaction.user.id in fila_ids:
+            idx = fila_ids.index(interaction.user.id)
+            fila_fazenda.pop(idx)
+            fila_ids.pop(idx)
             await self.atualizar(interaction)
         else:
             await interaction.response.send_message("⚠️ Você não está na fila!", ephemeral=True)
 
-    @discord.ui.button(label="Avançar Fila (Mod)", style=discord.ButtonStyle.blurple, custom_id="avancar_fila")
+    @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def avancar(self, interaction: discord.Interaction, button: Button):
-        if fila_fazenda:
-            removido = fila_fazenda.pop(0)
-            await self.atualizar(interaction)
-            await interaction.channel.send(f"🔔 **{removido}**, sua vaga na fazenda liberou!")
-        else:
-            await interaction.response.send_message("A fila está vazia!", ephemeral=True)
+        if not fila_fazenda:
+            return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
+        
+        removido_nome = fila_fazenda.pop(0)
+        removido_id = fila_ids.pop(0)
+        
+        await self.atualizar(interaction)
+        
+        # Envia aviso no ticket do usuário
+        member = interaction.guild.get_member(removido_id)
+        if member:
+            canal_ticket = discord.utils.get(interaction.guild.text_channels, name=f"ticket-{member.name.lower()}")
+            if canal_ticket:
+                await canal_ticket.send(f"🌾 {member.mention} Sua Vaga na Fazenda Gomes Girardi foi liberada! Estamos Te Esperando No Condado...")
+                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada e aviso enviado no ticket!", ephemeral=True)
+            else:
+                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada, mas não encontrei o canal de ticket correspondente.", ephemeral=True)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -88,4 +100,5 @@ async def on_ready():
     bot.add_view(PainelFilaView())
     print(f"✅ {bot.user.name} online!")
 
+# O token é lido da variável de ambiente no Render
 bot.run(os.environ['DISCORD_TOKEN'])
