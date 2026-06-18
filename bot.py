@@ -100,7 +100,7 @@ async def on_ready():
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
         # Delay de 2 segundos para o Ticket Tool carregar primeiro
-        await asyncio.sleep(2) 
+        await asyncio.sleep(3) 
         
         canal_painel = None
         for g_channel in channel.guild.text_channels:
