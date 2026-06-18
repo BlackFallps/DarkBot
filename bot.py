@@ -114,7 +114,7 @@ async def on_guild_channel_create(channel):
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
-                description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Para mantermos a ordem, clique abaixo para ir direto ao painel.",
+                description="Olá Seja bem-vindo(a) Notamos que abriu uma pasta, Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera, Clique no Botão Abaixo Pra ir direto pro Painel onde você ira entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
                 color=discord.Color.brand_green()
             )
             
@@ -122,7 +122,7 @@ async def on_guild_channel_create(channel):
             msg = await channel.send(embed=embed, view=BotaoLinkView(url))
             
             # Limpeza: Deleta a mensagem após 20 segundos automaticamente
-            await asyncio.sleep(5)
+            await asyncio.sleep(20)
             try:
                 await msg.delete()
             except:
