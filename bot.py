@@ -78,18 +78,24 @@ class PainelFilaView(View):
         
         await self.atualizar(interaction)
         
-        # Procura um canal que contenha o ID do usuário no nome
-        # A maioria dos sistemas de tickets coloca o ID no nome do canal
-        canal_encontrado = discord.utils.find(
-            lambda c: str(removido_id) in c.name, 
-            interaction.guild.text_channels
-        )
+        member = interaction.guild.get_member(removido_id)
         
-        if canal_encontrado:
-            await canal_encontrado.send(f"🌾 <@{removido_id}> Sua Vaga na Fazenda Gomes Girardi foi liberada! Estamos Te Esperando No Condado...")
-            await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada e aviso enviado no canal {canal_encontrado.mention}!", ephemeral=True)
-        else:
-            await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada, mas não encontrei um canal contendo o ID: {removido_id}.", ephemeral=True)
+        if member:
+            canal_encontrado = None
+            # Procura um canal onde o usuário tenha permissão de ver
+            for canal in interaction.guild.text_channels:
+                # Verifica se o usuário tem permissão de ver esse canal
+                if canal.permissions_for(member).read_messages:
+                    # Verifica se o nome do canal começa com 'ticket-' (padrão do Ticket Tool)
+                    if "ticket-" in canal.name.lower():
+                        canal_encontrado = canal
+                        break
+            
+            if canal_encontrado:
+                await canal_encontrado.send(f"🌾 {member.mention} Sua Vaga na Fazenda Gomes Girardi foi liberada! Estamos Te Esperando No Condado...")
+                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada e aviso enviado no canal {canal_encontrado.mention}!", ephemeral=True)
+            else:
+                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada, mas não encontrei um canal de ticket ativo para este usuário.", ephemeral=True)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
