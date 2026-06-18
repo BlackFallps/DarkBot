@@ -98,19 +98,25 @@ async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
         await asyncio.sleep(5) 
         
-        # Verifica duplicata
         async for message in channel.history(limit=10):
             if message.author == bot.user:
                 return 
 
-        url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
+        canal_painel = None
+        for g_channel in channel.guild.text_channels:
+            async for message in g_channel.history(limit=100):
+                if message.author == bot.user and message.embeds and "🌾 FILA DA FAZENDA GOMES GIRARDI 🌾" in message.embeds[0].title:
+                    canal_painel = g_channel
+                    break
+            if canal_painel: break
+        
+        if canal_painel:
+            url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
-                description="Olá Seja bem-vindo(a) Notamos que abriu uma Pasta Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera, Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
+                description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
                 color=discord.Color.brand_green()
             )
-            
-            # O parâmetro delete_after=60 fará a mensagem sumir sozinha após 60 segundos
             await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
 
 @bot.command()
