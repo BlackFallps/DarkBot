@@ -21,22 +21,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 fila_fazenda = []
 fila_ids = []
 
-# --- View que apaga ao clicar e envia resposta efêmera com o link ---
-class BotaoRedirecionarInstantaneo(View):
+# --- View com o botão de LINK (o que tem a seta) ---
+class BotaoLinkView(View):
     def __init__(self, url):
         super().__init__(timeout=None)
-        self.url = url
-
-    @discord.ui.button(label="Clique Aqui", style=discord.ButtonStyle.primary)
-    async def botao_clique(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # 1. Envia o link de forma privada (apenas para quem clicou)
-        await interaction.response.send_message(f"Clique aqui para ir ao painel: {self.url}", ephemeral=True)
-        
-        # 2. Deleta a mensagem do canal onde o botão estava
-        try:
-            await interaction.message.delete()
-        except:
-            pass
+        # Este estilo cria o botão com a seta de redirecionamento
+        self.add_item(discord.ui.Button(label="Clique Aqui", style=discord.ButtonStyle.link, url=url))
 
 # --- Classe do Painel ---
 class PainelFilaView(View):
@@ -109,7 +99,9 @@ async def on_ready():
 @bot.event
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
-        # Sem sleep, envia imediatamente
+        # Delay de 2 segundos para o Ticket Tool carregar primeiro
+        await asyncio.sleep(2) 
+        
         canal_painel = None
         for g_channel in channel.guild.text_channels:
             async for message in g_channel.history(limit=50):
@@ -122,11 +114,19 @@ async def on_guild_channel_create(channel):
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
-                description="Olá! Seja bem-vindo(a). Clique abaixo para ser redirecionado ao painel.",
+                description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Para mantermos a ordem, clique abaixo para ir direto ao painel.",
                 color=discord.Color.brand_green()
             )
-            # Envia o botão que se autodestrói ao clicar
-            await channel.send(embed=embed, view=BotaoRedirecionarInstantaneo(url))
+            
+            # Envia a mensagem com o botão de Link (com seta)
+            msg = await channel.send(embed=embed, view=BotaoLinkView(url))
+            
+            # Limpeza: Deleta a mensagem após 20 segundos automaticamente
+            await asyncio.sleep(20)
+            try:
+                await msg.delete()
+            except:
+                pass
 
 @bot.command()
 @commands.has_permissions(administrator=True)
