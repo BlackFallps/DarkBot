@@ -78,15 +78,20 @@ class PainelFilaView(View):
         
         await self.atualizar(interaction)
         
-        # Envia aviso no ticket do usuário
         member = interaction.guild.get_member(removido_id)
         if member:
-            canal_ticket = discord.utils.get(interaction.guild.text_channels, name=f"ticket-{member.name.lower()}")
-            if canal_ticket:
-                await canal_ticket.send(f"🌾 {member.mention} Sua Vaga na Fazenda Gomes Girardi foi liberada! Estamos Te Esperando No Condado...")
-                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada e aviso enviado no ticket!", ephemeral=True)
+            # O bot agora procura qualquer canal que tenha o nome do usuário (ex: mark-silver)
+            canal_encontrado = None
+            for canal in interaction.guild.text_channels:
+                if member.name.lower() in canal.name.lower() or str(member.id) in canal.name:
+                    canal_encontrado = canal
+                    break
+            
+            if canal_encontrado:
+                await canal_encontrado.send(f"🌾 {member.mention} Sua Vaga na Fazenda Gomes Girardi foi liberada! Estamos Te Esperando No Condado...")
+                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada e aviso enviado no canal {canal_encontrado.mention}!", ephemeral=True)
             else:
-                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada, mas não encontrei o canal de ticket correspondente.", ephemeral=True)
+                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada, mas não encontrei nenhum canal com o nome do usuário.", ephemeral=True)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
