@@ -21,20 +21,15 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 fila_fazenda = []
 fila_ids = []
 
-# --- Classe para Botão de Link (Direto para o Painel) ---
+# --- Classe Corrigida: Usando botão de Link ---
 class LembreteFilaView(View):
     def __init__(self, url):
         super().__init__(timeout=60) # A mensagem expira em 60 segundos
-        self.add_item(discord.ui.Button(label="Clique Aqui", style=discord.ButtonStyle.link, url=url))
-
-    async def on_timeout(self):
-        # Quando o tempo acabar, tenta deletar a mensagem original
-        for child in self.children:
-            child.disabled = True
-        try:
-            await self.message.delete()
-        except:
-            pass
+        self.add_item(discord.ui.Button(
+            label="Clique Aqui", 
+            style=discord.ButtonStyle.link, 
+            url=url
+        ))
 
 # --- Classe do Painel Principal ---
 class PainelFilaView(View):
@@ -127,10 +122,12 @@ async def on_guild_channel_create(channel):
                 color=discord.Color.brand_green()
             )
             
-            # Envia a mensagem com o botão de link
+            # Envia a view com o botão de link único e limpa em 60s
             view = LembreteFilaView(url)
             msg = await channel.send(embed=embed, view=view)
-            view.message = msg # Vincula a mensagem à view para o timeout deletar
+            await asyncio.sleep(60)
+            try: await msg.delete()
+            except: pass
 
 @bot.command()
 @commands.has_permissions(administrator=True)
