@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 fila_fazenda = []
 fila_ids = []
 
-# --- Classe do Painel Principal (A única necessária) ---
+# --- Classe do Painel ---
 class PainelFilaView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -91,11 +91,17 @@ async def on_ready():
 
 @bot.event
 async def on_guild_channel_create(channel):
-    # O código abaixo é o único que enviará mensagem. 
-    # Se aparecerem 2, verifique se não há OUTRO BOT fazendo isso.
     if "ticket-" in channel.name.lower():
-        await asyncio.sleep(4) # Espera um pouco mais para garantir que mensagens de outros bots já enviaram
+        # Aumentamos o delay para 6 segundos para dar tempo de outros bots postarem
+        await asyncio.sleep(6)
         
+        # 1. LIMPEZA: Deleta mensagens de outros bots antes de postar a nossa
+        async for message in channel.history(limit=10):
+            if message.author != bot.user:
+                try: await message.delete()
+                except: pass
+
+        # 2. Busca o canal do painel
         canal_painel = None
         for g_channel in channel.guild.text_channels:
             async for message in g_channel.history(limit=50):
@@ -104,19 +110,20 @@ async def on_guild_channel_create(channel):
                     break
             if canal_painel: break
 
+        # 3. Envia APENAS a nossa mensagem
         if canal_painel:
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
-            
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
                 description="Olá! Seja bem-vindo(a). Clique no botão abaixo para ir direto ao painel.",
                 color=discord.Color.brand_green()
             )
-            
             view = View(timeout=60)
             view.add_item(discord.ui.Button(label="Clique Aqui", style=discord.ButtonStyle.link, url=url))
             
             msg = await channel.send(embed=embed, view=view)
+            
+            # Auto-deleta nossa mensagem após 60s para manter o canal limpo
             await asyncio.sleep(60)
             try: await msg.delete()
             except: pass
