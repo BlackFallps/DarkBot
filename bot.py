@@ -18,9 +18,6 @@ intents.message_content = True
 intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# --- CONFIGURAÇÃO: COLOQUE AQUI O ID DO CANAL ONDE O PAINEL ESTÁ ---
-ID_CANAL_PAINEL = 1477880103039144127 # Substitua pelo ID real do canal do painel!
-
 fila_fazenda = []
 fila_ids = []
 
@@ -106,13 +103,15 @@ async def on_guild_channel_create(channel):
             if message.author == bot.user:
                 return 
 
-        url = f"https://discord.com/channels/{channel.guild.id}/{ID_CANAL_PAINEL}"
-        embed = discord.Embed(
-            title="Fila da Fazenda Gomes Girardi",
-            description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
-            color=discord.Color.brand_green()
-        )
-        await channel.send(embed=embed, view=BotaoLinkView(url))
+        url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
+            embed = discord.Embed(
+                title="Fila da Fazenda Gomes Girardi",
+                description="Olá Seja bem-vindo(a) Notamos que abriu uma Pasta Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera, Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
+                color=discord.Color.brand_green()
+            )
+            
+            # O parâmetro delete_after=60 fará a mensagem sumir sozinha após 60 segundos
+            await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
