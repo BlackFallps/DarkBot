@@ -121,8 +121,8 @@ async def on_guild_channel_create(channel):
             # Envia a mensagem com o botão de Link (com seta)
             msg = await channel.send(embed=embed, view=BotaoLinkView(url))
             
-            # Limpeza: Deleta a mensagem após 20 segundos automaticamente
-            await asyncio.sleep(20)
+            # Limpeza: Deleta a mensagem após 60 segundos automaticamente
+            await asyncio.sleep(60)
             try:
                 await msg.delete()
             except:
