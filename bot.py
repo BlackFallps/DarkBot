@@ -29,9 +29,10 @@ class BotaoRedirecionarInstantaneo(View):
 
     @discord.ui.button(label="Clique Aqui", style=discord.ButtonStyle.primary)
     async def botao_clique(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Envia o link de forma privada (apenas para quem clicou)
+        # 1. Envia o link de forma privada (apenas para quem clicou)
         await interaction.response.send_message(f"Clique aqui para ir ao painel: {self.url}", ephemeral=True)
-        # Deleta a mensagem do canal imediatamente
+        
+        # 2. Deleta a mensagem do canal onde o botão estava
         try:
             await interaction.message.delete()
         except:
