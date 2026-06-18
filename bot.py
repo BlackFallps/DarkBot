@@ -21,17 +21,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 fila_fazenda = []
 fila_ids = []
 
-# --- Classe Corrigida: Usando botão de Link ---
-class LembreteFilaView(View):
-    def __init__(self, url):
-        super().__init__(timeout=60) # A mensagem expira em 60 segundos
-        self.add_item(discord.ui.Button(
-            label="Clique Aqui", 
-            style=discord.ButtonStyle.link, 
-            url=url
-        ))
-
-# --- Classe do Painel Principal ---
+# --- Classe do Painel Principal (A única necessária) ---
 class PainelFilaView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -101,48 +91,35 @@ async def on_ready():
 
 @bot.event
 async def on_guild_channel_create(channel):
-    # Verifica se é um canal de ticket
+    # O código abaixo é o único que enviará mensagem. 
+    # Se aparecerem 2, verifique se não há OUTRO BOT fazendo isso.
     if "ticket-" in channel.name.lower():
-        await asyncio.sleep(3)
+        await asyncio.sleep(4) # Espera um pouco mais para garantir que mensagens de outros bots já enviaram
         
-        # 1. Busca automática do painel
         canal_painel = None
         for g_channel in channel.guild.text_channels:
             async for message in g_channel.history(limit=50):
-                # Procura pela mensagem que contém o título do seu painel
                 if message.author == bot.user and message.embeds and "🌾 FILA DA FAZENDA GOMES GIRARDI 🌾" in message.embeds[0].title:
                     canal_painel = g_channel
                     break
             if canal_painel: break
 
-        # 2. Se encontrar o painel, envia apenas UMA mensagem com o botão de link
         if canal_painel:
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
             
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
-                description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Para mantermos a ordem, clique no botão abaixo para ir direto ao painel.",
+                description="Olá! Seja bem-vindo(a). Clique no botão abaixo para ir direto ao painel.",
                 color=discord.Color.brand_green()
             )
             
-            # Criamos a View e adicionamos o botão de link manualmente
-            # Isso evita o erro de 'unexpected keyword argument'
             view = View(timeout=60)
-            view.add_item(discord.ui.Button(
-                label="Clique Aqui", 
-                style=discord.ButtonStyle.link, 
-                url=url
-            ))
+            view.add_item(discord.ui.Button(label="Clique Aqui", style=discord.ButtonStyle.link, url=url))
             
-            # Envia a mensagem única
             msg = await channel.send(embed=embed, view=view)
-            
-            # Deleta a mensagem após 60 segundos para manter a pasta limpa
             await asyncio.sleep(60)
-            try:
-                await msg.delete()
-            except:
-                pass
+            try: await msg.delete()
+            except: pass
 
 @bot.command()
 @commands.has_permissions(administrator=True)
