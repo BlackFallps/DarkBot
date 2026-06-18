@@ -20,17 +20,13 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 fila_fazenda = []
 fila_ids = []
-canal_painel_id = None
 
 # --- Classe do Lembrete no Ticket ---
 class LembreteFilaView(View):
-    def __init__(self, guild_id=None, canal_id=None):
+    def __init__(self, guild_id, canal_painel_id):
         super().__init__(timeout=None)
-        if guild_id and canal_id:
-            url = f"https://discord.com/channels/{guild_id}/{canal_id}"
-            self.add_item(discord.ui.Button(label="Ir para o Painel da Fila", style=discord.ButtonStyle.link, url=url))
-        else:
-            self.add_item(discord.ui.Button(label="Painel (Não configurado)", style=discord.ButtonStyle.secondary, disabled=True))
+        url = f"https://discord.com/channels/{guild_id}/{canal_painel_id}"
+        self.add_item(discord.ui.Button(label="Clique Aqui", style=discord.ButtonStyle.link, url=url))
 
 # --- Classe do Painel Principal ---
 class PainelFilaView(View):
@@ -104,20 +100,29 @@ async def on_ready():
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
         await asyncio.sleep(3)
+        
+        # Busca automática do canal do painel
+        canal_painel = None
+        for g_channel in channel.guild.text_channels:
+            async for message in g_channel.history(limit=50):
+                if message.author == bot.user and message.embeds and "🌾 FILA DA FAZENDA GOMES GIRARDI 🌾" in message.embeds[0].title:
+                    canal_painel = g_channel
+                    break
+            if canal_painel: break
+
         embed = discord.Embed(
             title="Fila da Fazenda Gomes Girardi",
             description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta, Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera, Clique no Botão Abaixo Pra ir direto pro Painel onde você ira entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua pasta...",
             color=discord.Color.brand_green()
         )
-        # Passa os IDs para criar o botão dinâmico
-        view = LembreteFilaView(guild_id=channel.guild.id, canal_id=canal_painel_id)
-        await channel.send(embed=embed, view=view)
+        
+        if canal_painel:
+            view = LembreteFilaView(channel.guild.id, canal_painel.id)
+            await channel.send(embed=embed, view=view)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def fixarpainel(ctx):
-    global canal_painel_id
-    canal_painel_id = ctx.channel.id
     await ctx.message.delete()
     view = PainelFilaView()
     await ctx.send(content="||@here||", embed=view.gerar_embed(), view=view)
