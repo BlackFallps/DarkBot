@@ -29,14 +29,24 @@ class LembreteFilaView(View):
 
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="btn_entrar_lembrete")
     async def entrar(self, interaction: discord.Interaction, button: Button):
+        # Acessa as listas globais
+        global fila_fazenda, fila_ids
+        
         if interaction.user.id not in fila_ids:
             fila_fazenda.append(interaction.user.display_name)
             fila_ids.append(interaction.user.id)
+            
             await interaction.response.send_message("✅ Você entrou na fila com sucesso!", ephemeral=True)
+            
+            # Tenta deletar a mensagem do lembrete
             try:
                 await interaction.message.delete()
             except:
                 pass
+                
+            # IMPORTANTE: Como o painel principal não sabe que a lista mudou, 
+            # você precisará apenas clicar no painel principal ou ele atualizará 
+            # na próxima vez que alguém interagir com ele.
         else:
             await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
 
@@ -100,7 +110,7 @@ class PainelFilaView(View):
                     canal_encontrado = canal
                     break
             if canal_encontrado:
-                await canal_encontrado.send(f"🌾 {member.mention} Sua Vaga na Fazenda Gomes Girardi foi liberada! Estamos Te Esperando No Condado...")
+                await canal_encontrado.send(f"{member.mention} Sua Vaga na Fazenda Gomes Girardi foi liberada! Estamos Te Esperando No Condado...")
                 await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada e aviso enviado no canal {canal_encontrado.mention}!", ephemeral=True)
             else:
                 await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada, mas não encontrei o canal de ticket.", ephemeral=True)
@@ -117,8 +127,8 @@ async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
         await asyncio.sleep(3)
         embed = discord.Embed(
-            title="🚜 Fila da Fazenda Gomes Girardi",
-            description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera. Entre na fila clicando no botão abaixo; assim que chegar a sua vez, você receberá uma notificação aqui na sua pasta...",
+            title="**Fila da Fazenda Gomes Girardi**",
+            description="Olá! Seja bem-vindo(a) Notamos que abriu uma pasta, Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera, Entre na fila clicando no botão abaixo, assim que chegar a sua vez, você receberá uma notificação aqui na sua pasta...",
             color=discord.Color.brand_green()
         )
         await channel.send(embed=embed, view=LembreteFilaView(channel))
