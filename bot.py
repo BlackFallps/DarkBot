@@ -18,6 +18,9 @@ intents.message_content = True
 intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+# --- CONFIGURAÇÃO: COLOQUE AQUI O ID DO CANAL ONDE O PAINEL ESTÁ ---
+ID_CANAL_PAINEL = 1477880103039144127 # Substitua pelo ID real do canal do painel!
+
 fila_fazenda = []
 fila_ids = []
 
@@ -84,10 +87,8 @@ class PainelFilaView(View):
                     canal_encontrado = canal
                     break
             if canal_encontrado:
-                await canal_encontrado.send(f"{member.mention} Sua Vaga na Fazenda Gomes Girardi foi liberada! Estamos Te Esperando No Condado...")
+                await canal_encontrado.send(f"{member.mention} Sua Vaga na Fazenda Gomes Girardi foi liberada!")
                 await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada!", ephemeral=True)
-            else:
-                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada.", ephemeral=True)
 
 # --- Eventos ---
 @bot.event
@@ -97,36 +98,21 @@ async def on_ready():
 
 @bot.event
 async def on_guild_channel_create(channel):
-    # Verifica se é um canal de ticket
     if "ticket-" in channel.name.lower():
-        # Aguarda 5 segundos para garantir que o canal está pronto
         await asyncio.sleep(5) 
         
-        # Trava de segurança: Verifica se já existe UMA mensagem sua no canal
-        # Isso impede que o bot envie mensagens repetidas se o evento disparar novamente
+        # Verifica duplicata
         async for message in channel.history(limit=10):
             if message.author == bot.user:
-                return # Se já postou, não faz mais nada
+                return 
 
-        # Busca o ID do canal onde o painel principal está (para gerar o link)
-        canal_painel = None
-        for g_channel in channel.guild.text_channels:
-            async for message in g_channel.history(limit=50):
-                if message.author == bot.user and message.embeds and "🌾 FILA DA FAZENDA GOMES GIRARDI 🌾" in message.embeds[0].title:
-                    canal_painel = g_channel
-                    break
-            if canal_painel: break
-
-        if canal_painel:
-            url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
-            embed = discord.Embed(
-                title="Fila da Fazenda Gomes Girardi",
-                description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
-                color=discord.Color.brand_green()
-            )
-            
-            # Envia APENAS a mensagem que você quer que apareça
-            await channel.send(embed=embed, view=BotaoLinkView(url))
+        url = f"https://discord.com/channels/{channel.guild.id}/{ID_CANAL_PAINEL}"
+        embed = discord.Embed(
+            title="Fila da Fazenda Gomes Girardi",
+            description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
+            color=discord.Color.brand_green()
+        )
+        await channel.send(embed=embed, view=BotaoLinkView(url))
 
 @bot.command()
 @commands.has_permissions(administrator=True)
