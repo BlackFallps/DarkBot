@@ -21,11 +21,11 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 fila_fazenda = []
 fila_ids = []
 
-# --- View com o botão de LINK (o que tem a seta) ---
+# --- View com o botão de LINK ---
 class BotaoLinkView(View):
     def __init__(self, url):
         super().__init__(timeout=None)
-        self.add_item(discord.ui.Button(label="Clique Aqui", style=discord.ButtonStyle.link, url=url))
+        self.add_item(discord.ui.Button(label="Ir para o Painel", style=discord.ButtonStyle.link, url=url))
 
 # --- Classe do Painel ---
 class PainelFilaView(View):
@@ -98,15 +98,14 @@ async def on_ready():
 @bot.event
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
-        # 1. VERIFICAÇÃO CONTRA DUPLICIDADE:
-        # Verifica se já existe uma mensagem do bot no histórico recente deste canal
-        async for message in channel.history(limit=5):
-            if message.author == bot.user:
-                return # Se o bot já mandou, não faz nada.
-
-        # 2. Delay para o Ticket Tool criar a estrutura
-        await asyncio.sleep(3) 
+        # Aguarda 6 segundos para o Ticket Tool terminar de postar
+        await asyncio.sleep(6) 
         
+        # Verifica se o bot já enviou uma mensagem para evitar duplicatas
+        async for message in channel.history(limit=10):
+            if message.author == bot.user:
+                return 
+
         canal_painel = None
         for g_channel in channel.guild.text_channels:
             async for message in g_channel.history(limit=50):
@@ -119,14 +118,13 @@ async def on_guild_channel_create(channel):
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
-                description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
+                description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Clique no botão abaixo para ser redirecionado ao painel da fila.",
                 color=discord.Color.brand_green()
             )
             
-            # Envia a mensagem
             msg = await channel.send(embed=embed, view=BotaoLinkView(url))
             
-            # 3. Limpeza: Deleta a mensagem após 60 segundos
+            # Deleta a mensagem após 60 segundos
             await asyncio.sleep(60)
             try:
                 await msg.delete()
