@@ -102,4 +102,42 @@ class PainelFilaView(View):
                     break
             if canal_encontrado:
                 await canal_encontrado.send(f"{member.mention} Sua Vaga na Fazenda Gomes Girardi foi liberada! Estamos Te Esperando No Condado...")
-                await interaction
+                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada!", ephemeral=True)
+            else:
+                await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada.", ephemeral=True)
+
+# --- Eventos ---
+@bot.event
+async def on_ready():
+    bot.add_view(PainelFilaView())
+    print(f"✅ {bot.user.name} online!")
+
+@bot.event
+async def on_guild_channel_create(channel):
+    if "ticket-" in channel.name.lower():
+        await asyncio.sleep(3)
+        
+        canal_painel = None
+        for g_channel in channel.guild.text_channels:
+            async for message in g_channel.history(limit=50):
+                if message.author == bot.user and message.embeds and "🌾 FILA DA FAZENDA GOMES GIRARDI 🌾" in message.embeds[0].title:
+                    canal_painel = g_channel
+                    break
+            if canal_painel: break
+
+        if canal_painel:
+            embed = discord.Embed(
+                title="Fila da Fazenda Gomes Girardi",
+                description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Para mantermos a ordem na Fazenda, trabalhamos com uma fila de espera. Clique no botão abaixo para ir para o painel.",
+                color=discord.Color.brand_green()
+            )
+            await channel.send(embed=embed, view=LembreteFilaView(channel.guild.id, canal_painel.id))
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def fixarpainel(ctx):
+    await ctx.message.delete()
+    view = PainelFilaView()
+    await ctx.send(content="||@here||", embed=view.gerar_embed(), view=view)
+
+bot.run(os.environ['DISCORD_TOKEN'])
