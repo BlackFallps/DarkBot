@@ -77,21 +77,31 @@ class PainelFilaView(View):
 
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def avancar(self, interaction: discord.Interaction, button: Button):
+        # 1. Validação de cargo
         if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
             return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
+        
         if not fila_jogadores:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
-
+        
+        # 2. Pega o primeiro jogador da fila (que contém o 'canal_id' salvo)
         jogador = fila_jogadores.pop(0)
+        
+        # 3. Atualiza o painel visualmente
         await self.atualizar(interaction)
         
-        canal_ticket = interaction.guild.get_channel(jogador['canal_id'])
-        if canal_ticket:
-            await canal_ticket.send(f"<@{jogador['id']}> **Sua Vaga na Fazenda Gomes Girardi foi liberada, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
-            await interaction.response.send_message("✅ Vaga liberada no canal do ticket do jogador!", ephemeral=True)
+        # 4. Tenta buscar o canal exato onde o ticket foi aberto
+        canal_do_ticket = interaction.guild.get_channel(jogador['canal_id'])
+        
+        if canal_do_ticket:
+            # ENVIA NO CANAL CORRETO (O TICKET DO JOGADOR)
+            await canal_do_ticket.send(f"<@{jogador['id']}> **Sua Vaga na Fazenda Gomes Girardi foi liberada, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
+            
+            # Confirmação privada apenas para quem clicou (Gerente)
+            await interaction.followup.send(f"✅ Vaga de <@{jogador['id']}> liberada no canal {canal_do_ticket.mention}!", ephemeral=True)
         else:
-            await interaction.response.send_message("⚠️ Vaga liberada, mas não encontrei o canal do ticket original.", ephemeral=True)
-
+            # Caso o canal tenha sido deletado
+            await interaction.followup.send(f"⚠️ Vaga liberada, mas o canal do ticket (ID: {jogador['canal_id']}) não foi encontrado ou foi deletado.", ephemeral=True)
 # --- Eventos ---
 @bot.event
 async def on_guild_channel_create(channel):
