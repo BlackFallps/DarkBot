@@ -108,10 +108,10 @@ async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
         await asyncio.sleep(5) 
         
-        # Limpeza: Verifica se JÁ existe a mensagem de embed no histórico
-        async for message in channel.history(limit=5):
-            if message.author == bot.user and message.embeds:
-                return # Se o bot já enviou o embed, não faz mais nada
+        # Limpeza: Verifica se JÁ existe uma mensagem do bot no histórico
+        async for message in channel.history(limit=10):
+            if message.author == bot.user:
+                return # Se o bot já enviou algo, não envia de novo
 
         canal_painel = bot.get_channel(ID_CANAL_PAINEL)
         if canal_painel:
@@ -121,7 +121,7 @@ async def on_guild_channel_create(channel):
                 description="Olá! Notamos que abriu uma Pasta. Para mantermos a ordem na Fazenda, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel.",
                 color=discord.Color.brand_green()
             )
-            # Apenas envia o embed com o botão, sem texto acima
+            # APENAS este comando será executado, sem duplicação
             await channel.send(embed=embed, view=BotaoLinkView(url))
 
 @bot.command()
