@@ -24,12 +24,6 @@ ID_CANAL_PAINEL = 1477880103039144127
 fila_fazenda = []
 fila_ids = []
 
-# --- View com o botão de LINK ---
-class BotaoLinkView(View):
-    def __init__(self, url):
-        super().__init__(timeout=None)
-        self.add_item(discord.ui.Button(label="Ir para o Painel", style=discord.ButtonStyle.link, url=url))
-
 # --- Classe do Painel ---
 class PainelFilaView(View):
     def __init__(self):
@@ -106,26 +100,16 @@ async def on_ready():
 @bot.event
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
-        # ESPERA LONGA: Damos tempo para todos os outros bots enviarem suas mensagens
-        await asyncio.sleep(15) 
+        await asyncio.sleep(10) # Espera o Ticket Tool terminar de falar
         
-        # VERIFICAÇÃO FINAL: Se o bot já enviou algo neste canal, ignora.
-        async for message in channel.history(limit=50):
-            if message.author == bot.user:
-                return
+        # A MUDANÇA: O bot agora verifica se já existe QUALQUER mensagem no canal.
+        # Se houver mensagens (do Ticket Tool ou qualquer outra), ele NÃO envia nada.
+        async for message in channel.history(limit=5):
+            if message.id: 
+                return 
 
-        canal_painel = bot.get_channel(ID_CANAL_PAINEL)
-        if canal_painel:
-            url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
-            
-            embed = discord.Embed(
-                title="Fila da Fazenda Gomes Girardi",
-                description="Olá! Notamos que abriu uma Pasta. Para mantermos a ordem na Fazenda, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel.",
-                color=discord.Color.brand_green()
-            )
-            
-            # Envia APENAS uma vez
-            await channel.send(embed=embed, view=BotaoLinkView(url))
+        view = PainelFilaView()
+        await channel.send(content="||@here||", embed=view.gerar_embed(), view=view)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
