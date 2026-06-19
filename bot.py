@@ -37,21 +37,27 @@ class PainelFilaView(View):
     # (O código das funções entrar, sair e avancar permanece igual ao que você já tem)
 
 # --- EVENTO DE CRIAÇÃO DE CANAL ---
+# --- EVENTO DE CRIAÇÃO DE CANAL (ÚNICO) ---
 @bot.event
 async def on_guild_channel_create(channel):
+    # Verifica se é um canal de ticket
     if "ticket-" in channel.name.lower():
-        await asyncio.sleep(5) # Tempo para garantir que o bot processe o canal
+        await asyncio.sleep(5) 
+        
+        # Verifica se JÁ existe uma mensagem do DarkBot para não duplicar
+        async for message in channel.history(limit=10):
+            if message.author == bot.user:
+                return # Se o bot já enviou algo, não faz nada
         
         url = f"https://discord.com/channels/{channel.guild.id}/{ID_CANAL_PAINEL}"
         
-        # Embed solicitado em image_66ae3e.png
         embed = discord.Embed(
             title="Fila da Fazenda Gomes Girardi",
             description="Olá! Notamos que abriu uma Pasta. Para mantermos a ordem na Fazenda, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel.",
             color=discord.Color.brand_green()
         )
         
-        # Envia apenas a mensagem da imagem
+        # Envia APENAS o embed solicitado
         await channel.send(embed=embed, view=BotaoLinkView(url))
 
 @bot.event
