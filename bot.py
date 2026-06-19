@@ -68,7 +68,7 @@ class PainelFilaView(View):
         
         # 2. Envia a notificação temporária no canal (fora da mensagem principal)
         # Ela aparece e se apaga em 1 segundo, sem afetar o painel acima.
-        aviso = await interaction.channel.send("||@here|| 🔄", delete_after=1)
+        aviso = await interaction.channel.send("@here", delete_after=1)
         await asyncio.sleep(2)
         await interaction.edit_original_response(content=None, embed=self.gerar_embed(), view=self)
 
