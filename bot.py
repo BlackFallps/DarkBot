@@ -105,25 +105,30 @@ async def on_ready():
 
 @bot.event
 async def on_guild_channel_create(channel):
+    # O bot só deve agir se o nome do canal contiver "ticket-"
     if "ticket-" in channel.name.lower():
-        await asyncio.sleep(5) 
+        # Aumentamos o tempo para garantir que qualquer outro bot já terminou de enviar tudo
+        await asyncio.sleep(2) 
         
-        # Limpeza: Verifica se JÁ existe uma mensagem do bot no histórico
-        async for message in channel.history(limit=10):
+        # Limpeza: Vamos varrer o histórico em busca de qualquer rastro desse bot.
+        # Se encontrar QUALQUER mensagem deste bot, ele aborta a operação.
+        async for message in channel.history(limit=20):
             if message.author == bot.user:
-                return # Se o bot já enviou algo, não envia de novo
+                return # Já existe algo do bot aqui, então não enviamos nada duplicado.
 
         canal_painel = bot.get_channel(ID_CANAL_PAINEL)
         if canal_painel:
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
+            
+            # Criamos APENAS o embed necessário
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
                 description="Olá! Notamos que abriu uma Pasta. Para mantermos a ordem na Fazenda, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel.",
                 color=discord.Color.brand_green()
             )
-            # APENAS este comando será executado, sem duplicação
+            
+            # Enviamos apenas o embed com o botão, sem texto extra acima
             await channel.send(embed=embed, view=BotaoLinkView(url))
-
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def fixarpainel(ctx):
