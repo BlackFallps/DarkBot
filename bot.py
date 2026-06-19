@@ -58,8 +58,8 @@ class PainelFilaView(View):
         embed.set_footer(text=f"Total: {len(fila_fazenda)}")
         return embed
 
-    async def atualizar(self, interaction):
-        # Apenas edita a mensagem existente, sem enviar novas mensagens no canal
+    async def atualizar(self, interaction: discord.Interaction):
+        # Edita a mensagem mantendo o @here oculto dentro do conteúdo
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
 
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
@@ -96,7 +96,7 @@ class PainelFilaView(View):
                     canal_encontrado = canal
                     break
             if canal_encontrado:
-                await canal_encontrado.send(f"{member.mention} **Sua Vaga na Fazenda Gomes Girardi foi liberada, Procure os Gerentes ou os Donos no Condado para estar te contratando!!**")
+                await canal_encontrado.send(f"{member.mention} **Sua Vaga na Fazenda Gomes Girardi foi liberada! Procure os Gerentes.**")
                 await interaction.followup.send(f"✅ Vaga de {removido_nome} liberada!", ephemeral=True)
 
 # --- Eventos ---
@@ -108,14 +108,14 @@ async def on_ready():
 @bot.event
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
-        # Aumentei o tempo de espera para garantir que o canal esteja pronto
-        await asyncio.sleep(5) 
+        # Espera extra para garantir que o canal foi totalmente inicializado
+        await asyncio.sleep(4) 
         
-        # Verifica se O BOT já enviou algo
+        # Procura por qualquer mensagem do bot neste canal antes de enviar
         async for message in channel.history(limit=5):
             if message.author == bot.user:
-                return 
-        
+                return # Já existe mensagem, encerra para não duplicar
+
         canal_painel = bot.get_channel(ID_CANAL_PAINEL)
         if canal_painel:
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
@@ -124,7 +124,7 @@ async def on_guild_channel_create(channel):
                 description="Olá! Notamos que abriu uma pasta. Clique no botão abaixo para entrar na fila.",
                 color=discord.Color.brand_green()
             )
-            await channel.send(embed=embed, view=BotaoLinkView(url))
+            await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
 
 @bot.command()
 @commands.has_permissions(administrator=True)
