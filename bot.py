@@ -19,7 +19,7 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # --- CONFIGURAÇÃO: COLOQUE AQUI O ID DO CANAL ONDE O PAINEL ESTÁ ---
-ID_CANAL_PAINEL = 1477880103039144127 # Substitua pelo ID real do canal do painel!
+ID_CANAL_PAINEL = 1477880103039144127 
 
 fila_fazenda = []
 fila_ids = []
@@ -101,21 +101,25 @@ async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
         await asyncio.sleep(5) 
         
-        # Verifica duplicata
+        # Verifica se o bot já enviou algo para não duplicar
         async for message in channel.history(limit=10):
             if message.author == bot.user:
                 return 
 
+        # Busca o canal do painel pelo ID configurado
+        canal_painel = bot.get_channel(ID_CANAL_PAINEL)
+        
         if canal_painel:
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
-                description="Olá Seja bem-vindo(a) Notamos que abriu uma Pasta, Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera, Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
+                description="Olá! Seja bem-vindo(a). Notamos que abriu uma pasta. Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
                 color=discord.Color.brand_green()
             )
-            
-            # O parâmetro delete_after=60 fará a mensagem sumir sozinha após 60 segundos
+            # delete_after=60 remove a mensagem automaticamente após 1 minuto
             await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
+        else:
+            print(f"⚠️ ERRO: Canal do painel com ID {ID_CANAL_PAINEL} não encontrado.")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
