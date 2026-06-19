@@ -19,7 +19,7 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # --- CONFIGURAÇÃO: COLOQUE AQUI O ID DO CANAL ONDE O PAINEL ESTÁ ---
-ID_CANAL_PAINEL = 1477880103039144127 
+ID_CANAL_PAINEL = 1516284994711060631 
 
 fila_fazenda = []
 fila_ids = []
