@@ -42,11 +42,22 @@ class PainelFilaView(View):
             color=discord.Color.brand_green()
         )
         embed.set_thumbnail(url="https://r2.fivemanage.com/W9vFnvRHli5f57dMM8AKy/FazendaGomes.png")
+        
         if fila_fazenda:
-            lista_nomes = "\n".join([f"🥇 **{nome}** *(Próximo a Ser Contratado)*" if i == 0 else f"{i+1}. {nome}" for i, nome in enumerate(fila_fazenda)])
-            embed.add_field(name="Jogadores na Fila", value=lista_nomes, inline=False)
+            lista_formatada = []
+            for i, user_id in enumerate(fila_ids):
+                # Cria a menção clicável <@ID_DO_USUARIO>
+                mention = f"<@{user_id}>"
+                
+                if i == 0:
+                    lista_formatada.append(f"🥇 **{mention}** *(Próximo a Ser Contratado)*")
+                else:
+                    lista_formatada.append(f"{i+1}. {mention}")
+            
+            embed.add_field(name="Jogadores na Fila", value="\n".join(lista_formatada), inline=False)
         else:
             embed.add_field(name="Jogadores na Fila", value="*Ninguém na fila por enquanto.*", inline=False)
+            
         embed.set_footer(text=f"Total: {len(fila_fazenda)}")
         return embed
 
