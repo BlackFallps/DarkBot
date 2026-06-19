@@ -59,8 +59,8 @@ class PainelFilaView(View):
         return embed
 
     async def atualizar(self, interaction):
+        # Apenas edita a mensagem existente, sem enviar novas mensagens no canal
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
-        ping = await interaction.channel.send("||@here||", delete_after=1)
 
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
@@ -108,19 +108,23 @@ async def on_ready():
 @bot.event
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
-        await asyncio.sleep(2) 
-        async for message in channel.history(limit=10):
+        # Aumentei o tempo de espera para garantir que o canal esteja pronto
+        await asyncio.sleep(5) 
+        
+        # Verifica se O BOT já enviou algo
+        async for message in channel.history(limit=5):
             if message.author == bot.user:
                 return 
+        
         canal_painel = bot.get_channel(ID_CANAL_PAINEL)
         if canal_painel:
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
-                description="Olá Seja bem-vindo(a). Notamos que abriu uma Pasta. Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila.",
+                description="Olá! Notamos que abriu uma pasta. Clique no botão abaixo para entrar na fila.",
                 color=discord.Color.brand_green()
             )
-            await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
+            await channel.send(embed=embed, view=BotaoLinkView(url))
 
 @bot.command()
 @commands.has_permissions(administrator=True)
