@@ -60,16 +60,21 @@ class PainelFilaView(View):
     async def atualizar(self, interaction):
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
 
-    # Exemplo de como deve ficar o seu 'entrar'
-@discord.ui.button(label="Entrar na Fila", ...)
-async def entrar(self, interaction: discord.Interaction, button: Button):
-    # Aqui salvamos o ID do usuário E o ID do canal (ticket)
-    fila_jogadores.append({
-        'id': interaction.user.id, 
-        'canal_id': interaction.channel.id  # <--- ISSO É O QUE FALTA
-    })
-    await self.atualizar(interaction)
+# --- BOTÃO: ENTRAR NA FILA ---
+    @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
+    async def entrar(self, interaction: discord.Interaction, button: Button):
+        # Verifica se já está na fila
+        if not any(j['id'] == interaction.user.id for j in fila_jogadores):
+            fila_jogadores.append({
+                'id': interaction.user.id, 
+                'canal_id': interaction.channel.id 
+            })
+            await self.atualizar(interaction)
+            await interaction.response.send_message("✅ Você entrou na fila!", ephemeral=True)
+        else:
+            await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
 
+    # --- BOTÃO: SAIR DA FILA ---
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila")
     async def sair(self, interaction: discord.Interaction, button: Button):
         global fila_jogadores
@@ -77,23 +82,31 @@ async def entrar(self, interaction: discord.Interaction, button: Button):
         await self.atualizar(interaction)
         await interaction.response.send_message("Você saiu da fila!", ephemeral=True)
 
-    # Exemplo de como deve ficar o seu 'avancar' (Liberar Vaga)
-@discord.ui.button(label="Liberar Vaga 1° da Fila", ...)
-async def avancar(self, interaction: discord.Interaction, button: Button):
-    if not fila_jogadores:
-        return await interaction.response.send_message("Fila vazia!", ephemeral=True)
-    
-    # Pegamos o jogador que estava na fila (com o canal_id salvo)
-    jogador = fila_jogadores.pop(0)
-    
-    # Buscamos o canal original do ticket pelo ID salvo
-    canal_do_ticket = interaction.guild.get_channel(jogador['canal_id'])
-    
-    if canal_do_ticket:
-        # Agora o bot sabe exatamente para qual canal enviar!
-        await canal_do_ticket.send(f"<@{jogador['id']}> Sua vaga foi liberada!")
-    
-    await self.atualizar(interaction)
+    # --- BOTÃO: LIBERAR VAGA ---
+    @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
+    async def avancar(self, interaction: discord.Interaction, button: Button):
+        # Verificação de cargos (ajuste se necessário)
+        if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
+            return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
+
+        if not fila_jogadores:
+            return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
+        
+        # Pegamos o jogador da fila (com o canal_id salvo)
+        jogador = fila_jogadores.pop(0)
+        
+        # Buscamos o canal original do ticket pelo ID salvo
+        canal_do_ticket = interaction.guild.get_channel(jogador['canal_id'])
+        
+        if canal_do_ticket:
+            # Envia a mensagem no canal do ticket do jogador
+            await canal_do_ticket.send(f"<@{jogador['id']}> **Sua Vaga na Fazenda Gomes Girardi foi liberada, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
+            # Resposta privada para o Gerente
+            await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada no canal {canal_do_ticket.mention}!", ephemeral=True)
+        else:
+            await interaction.response.send_message("⚠️ Vaga liberada, mas o canal original do ticket não foi encontrado.", ephemeral=True)
+            
+        await self.atualizar(interaction)
 # --- Eventos ---
 @bot.event
 async def on_guild_channel_create(channel):
