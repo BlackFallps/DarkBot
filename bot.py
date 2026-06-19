@@ -19,7 +19,7 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # --- CONFIGURAÇÃO: COLOQUE AQUI O ID DO CANAL ONDE O PAINEL ESTÁ ---
-ID_CANAL_PAINEL = 1516284994711060631 
+ID_CANAL_PAINEL = 1477880103039144127
 
 fila_fazenda = []
 fila_ids = []
@@ -61,8 +61,11 @@ class PainelFilaView(View):
         embed.set_footer(text=f"Total: {len(fila_fazenda)}")
         return embed
 
-    async def atualizar(self, interaction: discord.Interaction):
+    async def atualizar(self, interaction):
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
+        ping = await interaction.channel.send("||@here||")
+        await asyncio.sleep(0.2)
+        await ping.delete()
 
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
