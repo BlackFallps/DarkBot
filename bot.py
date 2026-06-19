@@ -62,13 +62,14 @@ class PainelFilaView(View):
         return embed
 
     async def atualizar(self, interaction: discord.Interaction):
-        # Edita a mensagem mantendo o ||@here|| no conteúdo (content)
-        # e atualizando apenas o embed e a view.
+        # 1. Edita a mensagem principal mantendo o ||@here|| fixo no topo
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
         
-        # Envia uma notificação rápida no chat que apaga em 1 segundo
-        # apenas para gerar o "barulho" da notificação para os membros.
-        aviso = await interaction.channel.send("||@here||", delete_after=1)
+        # 2. Envia a notificação temporária logo abaixo que se apaga em 1 segundo
+        # Usamos follow-up pois a resposta original já foi usada no edit_message acima
+        aviso = await interaction.followup.send("||@here||", ephemeral=True)
+        await asyncio.sleep(1)
+        await aviso.delete()
         await asyncio.sleep(2)
         await interaction.edit_original_response(content=None, embed=self.gerar_embed(), view=self)
 
