@@ -104,7 +104,7 @@ class PainelFilaView(View):
 @bot.event
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
-        await asyncio.sleep(5) 
+        await asyncio.sleep(2) 
         async for message in channel.history(limit=10):
             if message.author == bot.user:
                 return 
