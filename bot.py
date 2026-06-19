@@ -57,8 +57,11 @@ class PainelFilaView(View):
         embed.set_footer(text=f"Total: {len(fila_fazenda)}")
         return embed
 
-    async def atualizar(self, interaction: discord.Interaction):
+    async def atualizar(self, interaction):
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
+        ping = await interaction.channel.send("||@here||")
+        await asyncio.sleep(0.2)
+        await ping.delete()
 
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
