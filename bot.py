@@ -61,36 +61,19 @@ class PainelFilaView(View):
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
 
 # --- BOTÃO: ENTRAR NA FILA ---
-   @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
+    @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
-        # Capturamos o ID do canal onde o usuário está AGORA (seja no ticket ou no painel)
         canal_onde_clicou = interaction.channel.id
         
         if not any(j['id'] == interaction.user.id for j in fila_jogadores):
             fila_jogadores.append({
                 'id': interaction.user.id, 
-                'canal_id': canal_onde_clicou # Salvamos o canal do ticket aqui!
+                'canal_id': canal_onde_clicou
             })
             await self.atualizar(interaction)
             await interaction.response.send_message("✅ Você entrou na fila!", ephemeral=True)
         else:
             await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
-
-    @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
-    async def avancar(self, interaction: discord.Interaction, button: Button):
-        # ... (verificação de cargos aqui) ...
-        
-        jogador = fila_jogadores.pop(0)
-        
-        # Agora buscamos o canal que foi salvo lá no botão 'entrar'
-        canal_ticket = interaction.guild.get_channel(jogador['canal_id'])
-        
-        if canal_ticket:
-            await canal_ticket.send(f"<@{jogador['id']}> **Sua Vaga foi liberada!**")
-            await interaction.response.send_message(f"✅ Liberado no ticket: {canal_ticket.mention}", ephemeral=True)
-        else:
-            # Fallback: Se o canal foi deletado, manda no canal onde o gerente clicou
-            await interaction.channel.send(f"<@{jogador['id']}> Sua vaga foi liberada! (Canal do ticket original não encontrado)")
 
     # --- BOTÃO: SAIR DA FILA ---
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila")
@@ -103,6 +86,26 @@ class PainelFilaView(View):
     # --- BOTÃO: LIBERAR VAGA ---
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def avancar(self, interaction: discord.Interaction, button: Button):
+        # Proteção: Verifica se quem clicou tem um dos cargos permitidos
+        if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
+            return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
+        
+        if not fila_jogadores:
+            return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
+        
+        jogador = fila_jogadores.pop(0)
+        canal_ticket = interaction.guild.get_channel(jogador['canal_id'])
+        
+        if canal_ticket:
+            # Envia a mensagem no canal salvo no momento da entrada
+            await canal_ticket.send(f"<@{jogador['id']}> **Sua Vaga na Fazenda foi liberada, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
+            await interaction.response.send_message(f"✅ Liberado no ticket: {canal_ticket.mention}", ephemeral=True)
+        else:
+            # Fallback se o canal foi deletado
+            await interaction.channel.send(f"<@{jogador['id']}> Sua vaga foi liberada! (Canal do ticket original não encontrado)")
+            await interaction.response.send_message("✅ Vaga liberada (canal do ticket não encontrado).", ephemeral=True)
+            
+        await self.atualizar(interaction)
         # ... (verificação de cargos aqui) ...
         
         jogador = fila_jogadores.pop(0)
