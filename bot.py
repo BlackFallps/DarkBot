@@ -59,6 +59,9 @@ class PainelFilaView(View):
 
     async def atualizar(self, interaction):
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
+        ping = await interaction.channel.send("||@here||")
+        await asyncio.sleep(0.2)
+        await ping.delete()
 
 # --- BOTÃO: ENTRAR NA FILA ---
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
@@ -83,20 +86,27 @@ class PainelFilaView(View):
     # --- BOTÃO: LIBERAR VAGA ---
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def avancar(self, interaction: discord.Interaction, button: Button):
+        # 1. Validação de cargos
         if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
-            return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
+            return await interaction.response.send_message("Apenas Gerentes ou Donos podem liberar a vaga ❌", ephemeral=True)
+        
         if not fila_jogadores:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
         
+        # 2. Pega o primeiro jogador e o remove da fila (pop)
         jogador = fila_jogadores.pop(0)
         await self.atualizar(interaction)
         
+        # 3. Busca o canal onde o jogador estava quando entrou na fila
         canal_ticket = interaction.guild.get_channel(jogador['canal_id'])
+        
+        # 4. Envia no canal correto ou avisa caso não encontre
         if canal_ticket:
-            await canal_ticket.send(f"<@{jogador['id']}> **Sua Vaga na Fazenda foi liberada, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
-            await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada no canal do ticket!", ephemeral=True)
+            await canal_ticket.send(f"<@{jogador['id']}> **Sua Vaga na Fazenda Gomes Girardi foi liberada, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
+            await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada no canal {canal_ticket.mention}!", ephemeral=True)
         else:
-            await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada (canal original não encontrado).", ephemeral=True)
+            # Caso o canal tenha sido deletado
+            await interaction.response.send_message(f"⚠️ Vaga de <@{jogador['id']}> liberada, mas não encontrei o canal do ticket original.", ephemeral=True)
             
 # --- Eventos ---
 @bot.event
