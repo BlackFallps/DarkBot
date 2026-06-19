@@ -46,7 +46,9 @@ class PainelFilaView(View):
         if fila_fazenda:
             lista_formatada = []
             for i, user_id in enumerate(fila_ids):
+                # Cria a menção clicável <@ID_DO_USUARIO>
                 mention = f"<@{user_id}>"
+                
                 if i == 0:
                     lista_formatada.append(f"🥇 **{mention}** *(Próximo a Ser Contratado)*")
                 else:
@@ -64,7 +66,7 @@ class PainelFilaView(View):
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
         
         # 2. Envia a notificação temporária que se auto-deleta
-        aviso = await interaction.channel.send("||@here|| 🔄", delete_after=2)
+        aviso = await interaction.channel.send("||@here||", delete_after=1)
 
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
@@ -113,10 +115,15 @@ async def on_ready():
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
         await asyncio.sleep(2) 
+        
+        # Verifica se o bot já enviou algo para não duplicar
         async for message in channel.history(limit=10):
             if message.author == bot.user:
                 return 
+
+        # Busca o canal do painel pelo ID configurado
         canal_painel = bot.get_channel(ID_CANAL_PAINEL)
+        
         if canal_painel:
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
             embed = discord.Embed(
@@ -124,6 +131,7 @@ async def on_guild_channel_create(channel):
                 description="Olá Seja bem-vindo(a) Notamos que abriu uma Pasta, Para mantermos a ordem na Fazenda devido à limitação de vagas, trabalhamos com uma fila de espera, Clique no Botão Abaixo para ir direto pro Painel onde você irá entrar na fila e assim que chegar a sua vez, você receberá uma notificação aqui na sua Pasta...",
                 color=discord.Color.brand_green()
             )
+            # delete_after=60 remove a mensagem automaticamente após 1 minuto
             await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
         else:
             print(f"⚠️ ERRO: Canal do painel com ID {ID_CANAL_PAINEL} não encontrado.")
