@@ -111,7 +111,9 @@ async def on_guild_channel_create(channel):
             description="Olá! Notamos que abriu uma Pasta. Para mantermos a ordem na Fazenda, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel.",
             color=discord.Color.brand_green()
         )
-        await channel.send(embed=embed, view=BotaoLinkView(url))
+        
+        # Apenas esta linha deve existir:
+        await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
 
 @bot.event
 async def on_ready():
