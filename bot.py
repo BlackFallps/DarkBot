@@ -61,14 +61,11 @@ class PainelFilaView(View):
         embed.set_footer(text=f"Total: {len(fila_fazenda)}")
         return embed
 
-   async def atualizar(self, interaction: discord.Interaction):
-        # 1. Edita apenas o Embed e a View do painel (sem tocar no 'content')
-        # Isso evita que o Discord limpe qualquer texto que esteja acima ou na mensagem.
-        await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
-        
-        # 2. Envia a notificação temporária como uma mensagem nova e limpa
-        # Ela aparece, notifica e se auto-deleta.
-        aviso = await interaction.channel.send("||@here||", delete_after=1)
+   async def atualizar(self, interaction):
+        await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
+        ping = await interaction.channel.send("||@here||")
+        await asyncio.sleep(0.2)
+        await ping.delete()
         await asyncio.sleep(2)
         await interaction.edit_original_response(content=None, embed=self.gerar_embed(), view=self)
 
