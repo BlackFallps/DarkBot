@@ -105,24 +105,23 @@ async def on_ready():
 
 @bot.event
 async def on_guild_channel_create(channel):
-    # O bot só vai agir se o nome do canal contiver "ticket-"
     if "ticket-" in channel.name.lower():
-        await asyncio.sleep(5) # Espera o ticket ser criado
+        await asyncio.sleep(5) 
         
-        # Procura se o bot já enviou a mensagem correta para não duplicar
+        # Limpeza: Verifica se JÁ existe a mensagem de embed no histórico
         async for message in channel.history(limit=5):
-            if message.author == bot.user and "Fila da Fazenda" in str(message.embeds):
-                return 
+            if message.author == bot.user and message.embeds:
+                return # Se o bot já enviou o embed, não faz mais nada
 
         canal_painel = bot.get_channel(ID_CANAL_PAINEL)
         if canal_painel:
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
-            # Aqui está a mensagem que você quer que apareça
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
                 description="Olá! Notamos que abriu uma Pasta. Para mantermos a ordem na Fazenda, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel.",
                 color=discord.Color.brand_green()
             )
+            # Apenas envia o embed com o botão, sem texto acima
             await channel.send(embed=embed, view=BotaoLinkView(url))
 
 @bot.command()
