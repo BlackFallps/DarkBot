@@ -86,27 +86,25 @@ class PainelFilaView(View):
     # --- BOTÃO: LIBERAR VAGA ---
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def avancar(self, interaction: discord.Interaction, button: Button):
-        # 1. Validação de cargos
+        # Verifica se quem clicou tem permissão
         if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
-            return await interaction.response.send_message("Apenas Gerentes ou Donos podem liberar a vaga ❌", ephemeral=True)
+            return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
         
+        # Verifica se a fila tem alguém
         if not fila_jogadores:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
         
-        # 2. Pega o primeiro jogador e o remove da fila (pop)
+        # Remove o primeiro da fila
         jogador = fila_jogadores.pop(0)
+        
+        # Atualiza o painel para mostrar que ele saiu
         await self.atualizar(interaction)
         
-        # 3. Busca o canal onde o jogador estava quando entrou na fila
-        canal_ticket = interaction.guild.get_channel(jogador['canal_id'])
+        # Manda a mensagem no CANAL ATUAL (onde o botão foi clicado) marcando o jogador
+        await interaction.channel.send(f"<@{jogador['id']}> **Sua Vaga foi liberada! Procure um Gerente ou Dono para ser contratado.**")
         
-        # 4. Envia no canal correto ou avisa caso não encontre
-        if canal_ticket:
-            await canal_ticket.send(f"<@{jogador['id']}> **Sua Vaga na Fazenda Gomes Girardi foi liberada, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
-            await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada no canal {canal_ticket.mention}!", ephemeral=True)
-        else:
-            # Caso o canal tenha sido deletado
-            await interaction.response.send_message(f"⚠️ Vaga de <@{jogador['id']}> liberada, mas não encontrei o canal do ticket original.", ephemeral=True)
+        # Resposta oculta pro gerente
+        await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada com sucesso!", ephemeral=True)
             
 # --- Eventos ---
 @bot.event
