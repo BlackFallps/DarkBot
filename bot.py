@@ -86,25 +86,27 @@ class PainelFilaView(View):
     # --- BOTÃO: LIBERAR VAGA ---
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def avancar(self, interaction: discord.Interaction, button: Button):
-        # Verifica se quem clicou tem permissão
+        # 1. Validação de cargo
         if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
             return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
         
-        # Verifica se a fila tem alguém
+        # 2. Verifica fila
         if not fila_jogadores:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
         
-        # Remove o primeiro da fila
+        # 3. Pega o jogador e remove da fila
         jogador = fila_jogadores.pop(0)
-        
-        # Atualiza o painel para mostrar que ele saiu
         await self.atualizar(interaction)
         
-        # Manda a mensagem no CANAL ATUAL (onde o botão foi clicado) marcando o jogador
-        await interaction.channel.send(f"<@{jogador['id']}> **Sua Vaga foi liberada! Procure um Gerente ou Dono para ser contratado.**")
+        # 4. Envia mensagem apenas para o Gerente (que clicou) ver, confirmando a ação
+        await interaction.response.send_message(
+            f"✅ Vaga de <@{jogador['id']}> liberada com sucesso!", 
+            ephemeral=True
+        )
         
-        # Resposta oculta pro gerente
-        await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada com sucesso!", ephemeral=True)
+        # 5. Opcional: Se quiser que o jogador saiba, ele receberá a menção no canal
+        # (Isso garante que o painel não fique poluído com mensagens)
+        await interaction.channel.send(f"<@{jogador['id']}> Sua vaga foi liberada! Procure um Gerente.")
             
 # --- Eventos ---
 @bot.event
