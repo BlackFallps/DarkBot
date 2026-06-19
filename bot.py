@@ -28,7 +28,7 @@ fila_ids = []
 class BotaoLinkView(View):
     def __init__(self, url):
         super().__init__(timeout=None)
-        self.add_item(discord.ui.Button(label="Clique Aqui", style=discord.ButtonStyle.link, url=url))
+        self.add_item(discord.ui.Button(label="Ir para o Painel", style=discord.ButtonStyle.link, url=url))
 
 # --- Classe do Painel ---
 class PainelFilaView(View):
@@ -54,12 +54,10 @@ class PainelFilaView(View):
             embed.add_field(name="Jogadores na Fila", value="\n".join(lista_formatada), inline=False)
         else:
             embed.add_field(name="Jogadores na Fila", value="*Ninguém na fila por enquanto.*", inline=False)
-            
         embed.set_footer(text=f"Total: {len(fila_fazenda)}")
         return embed
 
     async def atualizar(self, interaction: discord.Interaction):
-        # Edita a mensagem mantendo o @here oculto dentro do conteúdo
         await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
 
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
@@ -107,24 +105,25 @@ async def on_ready():
 
 @bot.event
 async def on_guild_channel_create(channel):
+    # O bot só vai agir se o nome do canal contiver "ticket-"
     if "ticket-" in channel.name.lower():
-        # Espera extra para garantir que o canal foi totalmente inicializado
-        await asyncio.sleep(4) 
+        await asyncio.sleep(5) # Espera o ticket ser criado
         
-        # Procura por qualquer mensagem do bot neste canal antes de enviar
+        # Procura se o bot já enviou a mensagem correta para não duplicar
         async for message in channel.history(limit=5):
-            if message.author == bot.user:
-                return # Já existe mensagem, encerra para não duplicar
+            if message.author == bot.user and "Fila da Fazenda" in str(message.embeds):
+                return 
 
         canal_painel = bot.get_channel(ID_CANAL_PAINEL)
         if canal_painel:
             url = f"https://discord.com/channels/{channel.guild.id}/{canal_painel.id}"
+            # Aqui está a mensagem que você quer que apareça
             embed = discord.Embed(
                 title="Fila da Fazenda Gomes Girardi",
-                description="Olá! Notamos que abriu uma pasta. Clique no botão abaixo para entrar na fila.",
+                description="Olá! Notamos que abriu uma Pasta. Para mantermos a ordem na Fazenda, trabalhamos com uma fila de espera. Clique no Botão Abaixo para ir direto pro Painel.",
                 color=discord.Color.brand_green()
             )
-            await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
+            await channel.send(embed=embed, view=BotaoLinkView(url))
 
 @bot.command()
 @commands.has_permissions(administrator=True)
