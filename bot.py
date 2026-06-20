@@ -96,8 +96,11 @@ class PainelFilaView(View):
         # 2. Remove o jogador
         jogador = fila_jogadores.pop(0)
         await self.atualizar(interaction)
+
+        # 3. Resposta EFÊMERA para o Gerente (Só ele vê a confirmação)
+        await interaction.response.send_message(f" Vaga de <@{jogador['id']}> liberada com sucesso ✅", ephemeral=True)
         
-        # 3. Tenta enviar DM para o jogador
+        # 4. Tenta enviar DM para o jogador
         try:
             membro = interaction.guild.get_member(jogador['id'])
             if membro:
