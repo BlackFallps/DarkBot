@@ -24,11 +24,13 @@ CARGOS_PERMITIDOS = [1465117225672249487, 1509877190995476610, 12814768841310904
 
 fila_jogadores = []
 
+# --- View com o botão de LINK ---
 class BotaoLinkView(View):
     def __init__(self, url):
         super().__init__(timeout=None)
         self.add_item(discord.ui.Button(label="Ir para o Painel", style=discord.ButtonStyle.link, url=url))
 
+# --- Classe do Painel ---
 class PainelFilaView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -40,6 +42,7 @@ class PainelFilaView(View):
             color=discord.Color.brand_green()
         )
         embed.set_thumbnail(url="https://r2.fivemanage.com/W9vFnvRHli5f57dMM8AKy/FazendaGomes.png")
+        
         if fila_jogadores:
             lista_formatada = []
             for i, jogador in enumerate(fila_jogadores):
@@ -60,7 +63,7 @@ class PainelFilaView(View):
         await asyncio.sleep(0.2)
         await ping.delete()
 
-    # --- BOTÃO: ENTRAR NA FILA ---
+# --- BOTÃO: ENTRAR NA FILA ---
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
         canal_onde_clicou = interaction.channel.id
@@ -102,13 +105,23 @@ class PainelFilaView(View):
             if canal_encontrado:
                 await canal_encontrado.send(f"{member.mention} **Sua Vaga na Fazenda Gomes Girardi foi liberado, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
                 await interaction.followup.send(f"Vaga de {removido_nome} liberada ✅", ephemeral=True)
-
+            
+# --- Eventos ---
 @bot.event
 async def on_guild_channel_create(channel):
     if "ticket-" in channel.name.lower():
-        await asyncio.sleep(2)
+        await asyncio.sleep(2) 
+        async for message in channel.history(limit=10):
+            if message.author == bot.user:
+                return 
         url = f"https://discord.com/channels/{channel.guild.id}/{ID_CANAL_PAINEL}"
-        embed = discord.Embed(title="Fila da Fazenda", description="Clique abaixo para entrar na fila:", color=discord.Color.brand_green())
+        embed = discord.Embed(
+            title="Fila da Fazenda Gomes Girardi",
+            description="Olá Seja bem-vindo(a) Notamos que abriu uma Pasta, Para mantermos a ordem na Fazenda devido à limitação de vagas, Trabalhamos com uma fila de espera pra Ser Contratado no Condado, Clique no Botão Abaixo para ir direto pro Painel...",
+            color=discord.Color.brand_green()
+        )
+        
+        # Apenas esta linha deve existir:
         await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
 
 @bot.event
