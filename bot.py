@@ -85,25 +85,29 @@ class PainelFilaView(View):
             await interaction.response.send_message("Você não está na fila.", ephemeral=True)
 
     # --- BOTÃO: LIBERAR VAGA ---
+    # --- BOTÃO: LIBERAR VAGA ---
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
-    async def avancar(self, interaction: discord.Interaction, button: Button):
+    async def liberar(self, interaction: discord.Interaction, button: Button):
+        # 1. Verifica se tem alguém na fila
         if not fila_jogadores:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
         
-        jogador = fila_jogadores.pop(0)
-        await self.atualizar(interaction)
+        # 2. Pega o ID do jogador e remove da fila
+        removido_id = fila_jogadores.pop(0)
         
-        member = interaction.guild.get_member(jogador['id'])
-        if member:
-            canal_encontrado = None
-            for canal in interaction.guild.text_channels:
-                if "ticket-" in canal.name.lower():
-                    canal_encontrado = canal
-                    break
-            if canal_encontrado:
-                await canal_encontrado.send(f"{member.mention} **Sua Vaga na Fazenda Gomes Girardi foi liberado, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
+        # 3. Atualiza o painel primeiro (usando edit_message para responder a interação)
+        await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
         
-        await interaction.response.send_message(f"Vaga de <@{jogador['id']}> liberada ✅", ephemeral=True)
+        # 4. Tenta enviar DM para o jogador
+        try:
+            member = interaction.guild.get_member(removido_id)
+            if member:
+                await member.send(f"✅ **Sua Vaga na Fazenda Gomes Girardi foi liberada!** Procure os Gerentes ou os Donos no Condado para ser contratado.")
+        except discord.Forbidden:
+            print("Não foi possível enviar DM (o usuário bloqueou DMs ou não é do servidor).")
+            
+        # 5. Envia a mensagem de confirmação para o gerente no canal (usando follow-up)
+        await interaction.followup.send(f"Vaga de <@{removido_id}> liberada com sucesso! ✅", ephemeral=True)
             
 # --- Eventos ---
 @bot.event
