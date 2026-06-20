@@ -62,9 +62,15 @@ class PainelFilaView(View):
 
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
+        canal_onde_clicou = interaction.channel.id
+        
         if not any(j['id'] == interaction.user.id for j in fila_jogadores):
-            fila_jogadores.append({'id': interaction.user.id})
+            fila_jogadores.append({'id': interaction.user.id, 'canal_id': canal_onde_clicou})
+            
+            # 1. Responda primeiro para evitar o erro de "Interaction already responded"
             await interaction.response.send_message("✅ Você entrou na fila!", ephemeral=True)
+            
+            # 2. Atualize o painel depois
             await self.atualizar(interaction)
         else:
             await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
@@ -78,18 +84,21 @@ class PainelFilaView(View):
 
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def avancar(self, interaction: discord.Interaction, button: Button):
-        if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
-            return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
-        if not fila_jogadores:
+        if not fila_fazenda:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
-        jogador = fila_jogadores.pop(0)
-        await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada!", ephemeral=True)
+        removido_nome = fila_fazenda.pop(0)
+        removido_id = fila_ids.pop(0)
         await self.atualizar(interaction)
-        member = interaction.guild.get_member(jogador['id'])
+        member = interaction.guild.get_member(removido_id)
         if member:
-            canal = discord.utils.get(interaction.guild.text_channels, name=f"ticket-{member.name.lower()}")
-            if canal:
-                await canal.send(f"{member.mention} **Sua Vaga foi liberada! Procure os Gerentes no Condado.**")
+            canal_encontrado = None
+            for canal in interaction.guild.text_channels:
+                if "ticket-" in canal.name.lower():
+                    canal_encontrado = canal
+                    break
+            if canal_encontrado:
+                await canal_encontrado.send(f"{member.mention} **Sua Vaga na Fazenda Gomes Girardi foi liberado, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
+                await interaction.followup.send(f"Vaga de {removido_nome} liberada ✅", ephemeral=True)
 
 @bot.event
 async def on_guild_channel_create(channel):
