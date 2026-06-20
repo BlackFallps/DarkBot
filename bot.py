@@ -38,7 +38,7 @@ class PainelFilaView(View):
     def gerar_embed(self):
         embed = discord.Embed(
             title="🌾 FILA DA FAZENDA GOMES GIRARDI 🌾",
-            description="Clique nos botões abaixo para gerenciar sua vaga na fila!",
+            description="Clique nos Botões Abaixo Para Gerenciar sua Vaga na Fila!",
             color=discord.Color.brand_green()
         )
         embed.set_thumbnail(url="https://r2.fivemanage.com/W9vFnvRHli5f57dMM8AKy/FazendaGomes.png")
