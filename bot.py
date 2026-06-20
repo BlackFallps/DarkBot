@@ -107,7 +107,7 @@ class PainelFilaView(View):
             if membro:
                 await membro.send(f"✅ **Sua Vaga na Fazenda Gomes Girardi foi liberada!** Procure os Gerentes ou os Donos no Condado para ser contratado.")
         except Exception:
-            pass # Ignora erro se não conseguir enviar DM
+            pass
             
 # --- Eventos ---
 @bot.event
