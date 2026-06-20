@@ -112,6 +112,12 @@ class PainelFilaView(View):
     # --- BOTÃO: LIBERAR VAGA ---
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def liberar(self, interaction: discord.Interaction, button: Button):
+        # --- ADICIONADO: Verificação de Permissão ---
+        cargo_permitido_id = SEU_ID_DO_CARGO_AQUI 
+        if not any(role.id == cargo_permitido_id for role in interaction.user.roles):
+            return await interaction.response.send_message("Você não tem Permissão! Somente Gerentes ou Donos podem Liberar Vagas ❌", ephemeral=True)
+        # --------------------------------------------
+
         # 1. Verifica se tem alguém na fila
         if not fila_jogadores:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
@@ -119,7 +125,7 @@ class PainelFilaView(View):
         # 2. Pega o ID do jogador e remove da fila
         removido_id = fila_jogadores.pop(0)
         
-        # 3. Atualiza o painel primeiro (usando edit_message para responder a interação)
+        # 3. Atualiza o painel primeiro
         await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
         
         # 4. Tenta enviar DM para o jogador
@@ -128,10 +134,10 @@ class PainelFilaView(View):
             if member:
                 await member.send(f"**Sua Vaga na Fazenda Gomes Girardi Foi Liberado!** Procure os Gerentes ou os Donos no Condado Para Ser Contratado!!")
         except discord.Forbidden:
-            print("Não foi possível enviar DM (o usuário bloqueou DMs ou não é do servidor).")
+            print("Não foi possível enviar DM (o usuário bloqueou DMs).")
             
-        # 5. Envia a mensagem de confirmação para o gerente no canal (usando follow-up)
-        await interaction.followup.send(f"Vaga de <@{removido_id}> liberada com sucesso! ✅", ephemeral=True)
+        # 5. Envia a mensagem de confirmação para o gerente no canal
+        await interaction.followup.send(f"Vaga de <@{removido_id}> liberado com sucesso ✅", ephemeral=True)
             
 # --- Eventos ---
 @bot.event
