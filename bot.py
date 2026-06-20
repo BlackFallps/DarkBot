@@ -90,24 +90,24 @@ class PainelFilaView(View):
         if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
             return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
         
-        # 2. Verifica fila
+        # 2. Verifica se a fila está vazia
         if not fila_jogadores:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
         
-        # 3. Processamento
+        # 3. Processamento (remove o jogador)
         jogador = fila_jogadores.pop(0)
         await self.atualizar(interaction)
         
-        # 4. Resposta efêmera para o gerente
+        # 4. Resposta ÚNICA para o Gerente (efêmera)
         await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada com sucesso!", ephemeral=True)
         
-        # 5. Envio de DM para o jogador
+        # 5. Envio de DM (independente, não causa erro de resposta dupla)
         try:
-            membro = interaction.guild.get_member(jogador['id'])
+            membro = await interaction.guild.fetch_member(jogador['id'])
             if membro:
                 await membro.send(f"✅ **Sua Vaga na Fazenda Gomes Girardi foi liberada!** Procure os Gerentes ou os Donos no Condado para ser contratado.")
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Não foi possível enviar DM: {e}")
             
 # --- Eventos ---
 @bot.event
