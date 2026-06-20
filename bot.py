@@ -67,7 +67,7 @@ class PainelFilaView(View):
     async def enviar_ping_temporario(self, channel):
         try:
             ping = await channel.send("||@here||")
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
             await ping.delete()
         except Exception:
             pass
