@@ -97,20 +97,20 @@ class PainelFilaView(View):
         jogador = fila_jogadores.pop(0)
         await self.atualizar(interaction)
 
-        # 3. Resposta EFÊMERA para o Gerente (Só ele vê a confirmação)
-        await interaction.response.send_message(f" Vaga de <@{jogador['id']}> liberada com sucesso ✅", ephemeral=True)
+        # 3. Resposta inicial (Obrigatória para o botão parar de carregar)
+        await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada com sucesso!", ephemeral=True)
         
-        # 4. Tenta enviar DM para o jogador
+        # 4. Tenta enviar DM usando o followup (não gera erro de resposta dupla)
         try:
             membro = interaction.guild.get_member(jogador['id'])
             if membro:
                 await membro.send(f"✅ **Sua Vaga na Fazenda Gomes Girardi foi liberada!** Procure os Gerentes ou os Donos no Condado para ser contratado.")
-                await interaction.response.send_message(f"✅ Vaga de {membro.mention} liberada com sucesso! (DM enviada)", ephemeral=True)
+                await interaction.followup.send(f"DM enviada para {membro.mention} com sucesso!", ephemeral=True)
             else:
-                await interaction.response.send_message("✅ Vaga liberada, mas não foi possível enviar DM.", ephemeral=True)
+                await interaction.followup.send("Vaga liberada, mas não encontrei o membro no servidor para enviar DM.", ephemeral=True)
         except discord.Forbidden:
-            # Caso o usuário tenha bloqueado DMs
-            await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada, mas o jogador bloqueou DMs.", ephemeral=True)
+            # Caso o usuário tenha bloqueado DMs, avisa o gerente (o bot não consegue falar com ele)
+            await interaction.followup.send(f"Vaga de <@{jogador['id']}> liberada, mas o jogador bloqueou DMs.", ephemeral=True)
             
 # --- Eventos ---
 @bot.event
