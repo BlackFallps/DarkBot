@@ -66,10 +66,11 @@ class PainelFilaView(View):
     async def entrar(self, interaction: discord.Interaction, button: Button):
         if interaction.user.id not in fila_jogadores:
             fila_jogadores.append(interaction.user.id)
-            # A linha de send_message foi removida para não enviar aviso
-            await self.atualizar(interaction)
+            # Esta linha abaixo responde à interação EDITANDO a mensagem original
+            # sem enviar mensagens de aviso novas.
+            await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
         else:
-            # Mantive apenas este aviso de erro para você saber que já está na fila
+            # Se já está na fila, apenas avisamos de forma oculta
             await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
 
     # --- BOTÃO: SAIR ---
