@@ -58,11 +58,23 @@ class PainelFilaView(View):
         embed.set_footer(text=f"Total: {len(fila_jogadores)}")
         return embed
 
-    async def atualizar(self, interaction):
-        await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
-        ping = await interaction.channel.send("||@here||")
-        await asyncio.sleep(0.2)
-        await ping.delete()
+    async def atualizar(self, interaction: discord.Interaction):
+        # 1. Apenas edita o painel (Sem tentar colocar o @here aqui)
+        await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
+        
+        # 2. Dispara a tarefa do ping em paralelo
+        asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
+
+    async def enviar_ping_temporario(self, channel):
+        try:
+            # Envia o ping
+            ping = await channel.send("||@here||")
+            # Espera um pouco para a notificação ser disparada
+            await asyncio.sleep(0.5)
+            # Deleta a mensagem
+            await ping.delete()
+        except Exception as e:
+            print(f"Erro ao processar ping: {e}")
 
     # --- BOTÃO: ENTRAR ---
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
@@ -103,7 +115,7 @@ class PainelFilaView(View):
         try:
             member = interaction.guild.get_member(removido_id)
             if member:
-                await member.send(f"**Sua Vaga na Fazenda Gomes Girardi foi liberado,** Procure os Gerentes ou os Donos no Condado para ser contratado!!")
+                await member.send(f"**Sua Vaga na Fazenda Gomes Girardi foi liberado!** Procure os Gerentes ou os Donos no Condado para ser contratado!!")
         except discord.Forbidden:
             print("Não foi possível enviar DM (o usuário bloqueou DMs ou não é do servidor).")
             
