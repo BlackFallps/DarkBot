@@ -58,27 +58,11 @@ class PainelFilaView(View):
         embed.set_footer(text=f"Total: {len(fila_jogadores)}")
         return embed
 
-    async def atualizar(self, interaction: discord.Interaction):
-        # 1. Edita a mensagem do painel imediatamente (Resposta obrigatória)
-        await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
-        
-        # 2. Cria uma tarefa em segundo plano para o ping (não trava o bot)
-        asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
-
-    async def atualizar(self, interaction: discord.Interaction):
-        # 1. Edita a mensagem do painel primeiro (obrigatorio responder)
-        await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
-        
-        # 2. Chama a tarefa do ping sempre que a fila mudar
-        asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
-
-    async def enviar_ping_temporario(self, channel):
-        try:
-            ping = await channel.send("||@here||")
-            await asyncio.sleep(0.2)
-            await ping.delete()
-        except Exception as e:
-            print(f"Erro ao processar ping: {e}")
+    async def atualizar(self, interaction):
+        await interaction.response.edit_message(content="||@here||", embed=self.gerar_embed(), view=self)
+        ping = await interaction.channel.send("||@here||")
+        await asyncio.sleep(0.2)
+        await ping.delete()
 
     # --- BOTÃO: ENTRAR ---
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
