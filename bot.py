@@ -64,10 +64,9 @@ class PainelFilaView(View):
     # --- BOTÃO: ENTRAR NA FILA ---
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
-        canal_onde_clicou = interaction.channel.id
-        if not any(j['id'] == interaction.user.id for j in fila_jogadores):
-            fila_jogadores.append({'id': interaction.user.id, 'canal_id': canal_onde_clicou})
-            await interaction.response.send_message("✅ Você entrou na fila!", ephemeral=True)
+        if interaction.user.id not in fila_ids:
+            fila_fazenda.append(interaction.user.display_name)
+            fila_ids.append(interaction.user.id)
             await self.atualizar(interaction)
         else:
             await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
