@@ -90,12 +90,24 @@ class PainelFilaView(View):
     # --- BOTÃO: LIBERAR VAGA ---
    @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def avancar(self, interaction: discord.Interaction, button: Button):
-        if not fila_fazenda:
+        # Validação de cargo
+        if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
+            return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
+            
+        if not fila_jogadores:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
-        removido_nome = fila_fazenda.pop(0)
-        removido_id = fila_ids.pop(0)
+        
+        # Remove o primeiro da fila
+        jogador = fila_jogadores.pop(0)
+        
+        # 1. Responda à interação primeiro (isso evita o erro de "Interaction already responded")
+        await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada com sucesso!", ephemeral=True)
+        
+        # 2. Atualize o painel
         await self.atualizar(interaction)
-        member = interaction.guild.get_member(removido_id)
+        
+        # 3. Envio da notificação no ticket
+        member = interaction.guild.get_member(jogador['id'])
         if member:
             canal_encontrado = None
             for canal in interaction.guild.text_channels:
@@ -103,8 +115,7 @@ class PainelFilaView(View):
                     canal_encontrado = canal
                     break
             if canal_encontrado:
-                await canal_encontrado.send(f"{member.mention} **Sua Vaga na Fazenda Gomes Girardi foi liberado, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
-                await interaction.followup.send(f"Vaga de {removido_nome} liberada ✅", ephemeral=True)
+                await canal_encontrado.send(f"{member.mention} **Sua Vaga na Fazenda Gomes Girardi foi liberada! Procure os Gerentes ou os Donos no Condado para ser contratado.**")
             
 # --- Eventos ---
 @bot.event
