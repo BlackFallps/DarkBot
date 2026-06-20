@@ -64,45 +64,68 @@ class PainelFilaView(View):
     async def enviar_ping_temporario(self, channel):
         try:
             ping = await channel.send("||@here||")
-            await asyncio.sleep(2)
+            await asyncio.sleep(0.1)
             await ping.delete()
         except Exception as e:
             print(f"Erro ao processar ping: {e}")
 
+    # --- BOTÃO: ENTRAR ---
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
         if interaction.user.id not in fila_jogadores:
             fila_jogadores.append(interaction.user.id)
+            
+            # 1. Edita a mensagem do painel
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
+            
+            # 2. Dispara o ping temporário em segundo plano
+            # Usamos o canal da interação para enviar o @here
             asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
+            
         else:
             await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
 
+    # --- BOTÃO: SAIR ---
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila")
     async def sair(self, interaction: discord.Interaction, button: Button):
         if interaction.user.id in fila_jogadores:
             fila_jogadores.remove(interaction.user.id)
             await self.atualizar(interaction)
+            # A linha de send_message foi removida
         else:
             await interaction.response.send_message("Você não está na fila.", ephemeral=True)
 
+    # --- BOTÃO: LIBERAR VAGA ---
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
     async def liberar(self, interaction: discord.Interaction, button: Button):
+        # 1. Verifica permissão
         if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
-            return await interaction.response.send_message("❌ Você Não Tem Permissão! Somente Gerentes ou Donos Podem Liberar Vagas.", ephemeral=True)
+            return await interaction.response.send_message(
+                "Você Não Tem Permissão! Somente Gerentes ou Donos Podem Liberar Vagas ❌", 
+                ephemeral=True
+            )
+
         if not fila_jogadores:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
         
         removido_id = fila_jogadores.pop(0)
+        
+        # 2. Resposta inicial editando o painel
         await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
+        
+        # 3. Dispara o ping temporário em SEGUNDO PLANO (agora com a indentação correta)
         asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
         
+        # 4. Envia a DM
         try:
             member = interaction.guild.get_member(removido_id)
             if member:
-                await member.send(f"**Sua Vaga na Fazenda Gomes Girardi Foi Liberada!** Procure os Gerentes ou os Donos no Condado Para Ser Contratado!!")
-        except: pass
-        await interaction.followup.send(f"Vaga de <@{removido_id}> liberada com sucesso ✅", ephemeral=True)
+                await member.send(f"**Sua Vaga na Fazenda Gomes Girardi Foi Liberado!** Procure os Gerentes ou os Donos no Condado Para Ser Contratado!!")
+        except:
+            pass
+            
+        # 5. Notificação de sucesso para o Gerente
+        await interaction.followup.send(f"Vaga de <@{removido_id}> Liberado Com Sucesso ✅", ephemeral=True)
 
 # --- Eventos ---
 @bot.event
