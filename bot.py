@@ -70,11 +70,15 @@ class PainelFilaView(View):
         
         if not any(j['id'] == interaction.user.id for j in fila_jogadores):
             fila_jogadores.append({'id': interaction.user.id, 'canal_id': canal_onde_clicou})
-            await self.atualizar(interaction)
+            
+            # 1. Responda primeiro para evitar o erro de "Interaction already responded"
             await interaction.response.send_message("✅ Você entrou na fila!", ephemeral=True)
+            
+            # 2. Atualize o painel depois
+            await self.atualizar(interaction)
         else:
             await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
-
+            
     # --- BOTÃO: SAIR DA FILA ---
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila")
     async def sair(self, interaction: discord.Interaction, button: Button):
