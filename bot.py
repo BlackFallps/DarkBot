@@ -89,29 +89,22 @@ class PainelFilaView(View):
 
     # --- BOTÃO: LIBERAR VAGA ---
    @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
-    async def avancar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # 1. Validação de cargo
-        if not any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles):
-            return await interaction.response.send_message("❌ Apenas Gerentes ou Donos podem liberar a vaga!", ephemeral=True)
-        
-        # 2. Verifica fila
-        if not fila_jogadores:
+    async def avancar(self, interaction: discord.Interaction, button: Button):
+        if not fila_fazenda:
             return await interaction.response.send_message("A fila está vazia!", ephemeral=True)
-        
-        # 3. Processamento
-        jogador = fila_jogadores.pop(0)
+        removido_nome = fila_fazenda.pop(0)
+        removido_id = fila_ids.pop(0)
         await self.atualizar(interaction)
-        
-        # 4. Resposta ÚNICA (evita erro de InteractionResponded)
-        await interaction.response.send_message(f"✅ Vaga de <@{jogador['id']}> liberada com sucesso!", ephemeral=True)
-        
-        # 5. Envio de DM separado (independente da resposta ao botão)
-        try:
-            membro = await interaction.guild.fetch_member(jogador['id'])
-            if membro:
-                await membro.send(f"✅ **Sua Vaga na Fazenda Gomes Girardi foi liberada!** Procure os Gerentes ou os Donos no Condado para ser contratado.")
-        except Exception as e:
-            print(f"Erro ao enviar DM: {e}")
+        member = interaction.guild.get_member(removido_id)
+        if member:
+            canal_encontrado = None
+            for canal in interaction.guild.text_channels:
+                if "ticket-" in canal.name.lower():
+                    canal_encontrado = canal
+                    break
+            if canal_encontrado:
+                await canal_encontrado.send(f"{member.mention} **Sua Vaga na Fazenda Gomes Girardi foi liberado, Procure os Gerentes ou os Donos no Condado Pra ser Contratado!!**")
+                await interaction.followup.send(f"Vaga de {removido_nome} liberada ✅", ephemeral=True)
             
 # --- Eventos ---
 @bot.event
