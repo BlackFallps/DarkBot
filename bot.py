@@ -64,17 +64,11 @@ class PainelFilaView(View):
         await ping.delete()
 
     # --- BOTÃO: ENTRAR NA FILA ---
-    @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
+    @@discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila")
     async def entrar(self, interaction: discord.Interaction, button: Button):
-        canal_onde_clicou = interaction.channel.id
-        
-        if not any(j['id'] == interaction.user.id for j in fila_jogadores):
-            fila_jogadores.append({'id': interaction.user.id, 'canal_id': canal_onde_clicou})
-            
-            # 1. Responda primeiro para evitar o erro de "Interaction already responded"
-            await interaction.response.send_message("✅ Você entrou na fila!", ephemeral=True)
-            
-            # 2. Atualize o painel depois
+        if interaction.user.id not in fila_ids:
+            fila_fazenda.append(interaction.user.display_name)
+            fila_ids.append(interaction.user.id)
             await self.atualizar(interaction)
         else:
             await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
@@ -82,10 +76,13 @@ class PainelFilaView(View):
     # --- BOTÃO: SAIR DA FILA ---
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila")
     async def sair(self, interaction: discord.Interaction, button: Button):
-        global fila_jogadores
-        fila_jogadores = [j for j in fila_jogadores if j['id'] != interaction.user.id]
-        await self.atualizar(interaction)
-        await interaction.response.send_message("Você saiu da fila!", ephemeral=True)
+        if interaction.user.id in fila_ids:
+            idx = fila_ids.index(interaction.user.id)
+            fila_fazenda.pop(idx)
+            fila_ids.pop(idx)
+            await self.atualizar(interaction)
+        else:
+            await interaction.response.send_message("⚠️ Você não está na fila!", ephemeral=True)
 
     # --- BOTÃO: LIBERAR VAGA ---
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
