@@ -59,11 +59,18 @@ class PainelFilaView(View):
         return embed
 
     async def atualizar(self, interaction: discord.Interaction):
-        # 1. Apenas edita o painel (Sem tentar colocar o @here aqui)
+        # Edita o painel sem causar erro de "Interação falhou"
         await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
-        
-        # 2. Dispara a tarefa do ping em paralelo
+        # Envia o ping em segundo plano
         asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
+
+    async def enviar_ping_temporario(self, channel):
+        try:
+            ping = await channel.send("||@here||")
+            await asyncio.sleep(0.5)
+            await ping.delete()
+        except Exception:
+            pass
 
     async def enviar_ping_temporario(self, channel):
         try:
