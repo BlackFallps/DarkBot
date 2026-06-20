@@ -137,6 +137,10 @@ class PainelFilaView(View):
             
         # Notificação de sucesso para o Gerente
         await interaction.followup.send(f"Vaga de <@{removido_id}> liberado com Sucesso ✅", ephemeral=True)
+        
+        # 2. Dispara o ping temporário em segundo plano
+            # Usamos o canal da interação para enviar o @here
+            asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
             
 # --- Eventos ---
 @bot.event
