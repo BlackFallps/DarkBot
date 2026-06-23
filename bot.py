@@ -36,7 +36,7 @@ async def lembrete_fatura():
             # Título com emojis e negrito para maior destaque
             title="📢 **𝐋𝐞𝐦𝐛𝐫𝐞𝐭𝐞: 𝐅𝐚𝐭𝐮𝐫𝐚 𝐒𝐞𝐦𝐚𝐧𝐚𝐥**",
             # Adicionei os \n\n\n para o espaçamento que você pediu
-            description="**Lembre-se da Fatura Semanal da Fazenda...**\n\n\nProcure um Gerente ou Dono no Condado para Efetuar o Pagamento e Manter tudo Acertado com a Fazenda!!\n\n\n",
+            description="**Lembre-se da Fatura Semanal da Fazenda...**\n\n\nProcure um Gerente ou Dono no Condado para Efetuar o Pagamento e Manter tudo Acertado com a Fazenda!!",
             color=cor_vermelho_escuro
         )
         
