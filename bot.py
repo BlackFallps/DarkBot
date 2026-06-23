@@ -25,7 +25,7 @@ CARGOS_PERMITIDOS = [1281476884131090468, 1509877190995476610, 12814768841310904
 fila_jogadores = []
 
 # --- TAREFA DE LEMBRETE ---
-@tasks.loop(seconds=5) # Mantenha 5 segundos para testes!
+@tasks.loop(seconds=20) # Mantenha 5 segundos para testes!
 async def lembrete_fatura():
     canal = bot.get_channel(1477880103039144127)
     if canal:
