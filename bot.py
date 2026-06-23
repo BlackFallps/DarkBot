@@ -25,7 +25,7 @@ CARGOS_PERMITIDOS = [1281476884131090468, 1509877190995476610, 12814768841310904
 fila_jogadores = []
 
 # --- TAREFA DE LEMBRETE ---
-@tasks.loop(hours=10) # Lembrar de trocar para hours=2 depois dos testes
+@tasks.loop(seconds=30) # Lembrar de trocar para hours=2 depois dos testes
 async def lembrete_fatura():
     canal = bot.get_channel(1477880103039144127)
     if canal:
@@ -38,9 +38,11 @@ async def lembrete_fatura():
         cor_vermelho_escuro = discord.Color.from_rgb(139, 0, 0)
         
         embed = discord.Embed(
-            title="📢 **𝗟𝗲𝗺𝗯𝗿𝗲𝘁𝗲: 𝗙𝗮𝘁𝘂𝗿𝗮 𝗦𝗲𝗺𝗮𝗻𝗮𝗹**",
+            title="📢 **Eii, você já deixou tudo Acertado com a Fazenda?**",
             # Adicionei \n\n no final da frase para criar o espaço que você quer
-            description="**Lembre-se da Fatura Semanal da Fazenda...**\n\nProcure um Gerente ou Dono no Condado para Efetuar o Pagamento e Manter tudo Acertado com a Fazenda!!",
+            description="Lembre-se de Verificar sua Fatura Semanal Da Fazenda...\n\n"
+            "Procure um gerente ou dono no Condado para Gerar sua Fatura, Evite Atrasos para não pagar Juros Desnecessários!!\n\n"
+            "Caso já tenha Quitado sua Pendência, Agradecemos a Colaboração!!",
             color=cor_vermelho_escuro
         )
         
