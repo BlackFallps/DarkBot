@@ -38,15 +38,12 @@ async def lembrete_fatura():
         cor_vermelho_escuro = discord.Color.from_rgb(139, 0, 0)
         
         embed = discord.Embed(
-            title="📢 **LEMBRETE: FATURA SEMANAL**",
+            title="📢 **𝗟𝗲𝗺𝗯𝗿𝗲𝘁𝗲: 𝗙𝗮𝘁𝘂𝗿𝗮 𝗦𝗲𝗺𝗮𝗻𝗮𝗹**",
+            # Adicionei \n\n no final da frase para criar o espaço que você quer
             description="**Lembre-se da Fatura Semanal da Fazenda...**\n\nProcure um Gerente ou Dono no Condado para Efetuar o Pagamento e Manter tudo Acertado com a Fazenda!!",
             color=cor_vermelho_escuro
         )
         
-        # Campo invisível para forçar o espaçamento que você deseja
-        embed.add_field(name="\u200b", value="\u200b", inline=False)
-        
-        # LINHA CORRIGIDA (apenas um parêntese no final):
         embed.set_footer(text="©︎ Fazenda Gomes Girardi - Administração")
 
 @lembrete_fatura.before_loop
