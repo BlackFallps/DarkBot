@@ -88,12 +88,23 @@ class PainelFilaView(View):
     # --- BOTÃO: SAIR ---
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila")
     async def sair(self, interaction: discord.Interaction, button: Button):
+        # Verifica se o usuário é um Gerente/Dono
+        eh_gerente = any(role.id in CARGOS_PERMITIDOS for role in interaction.user.roles)
+        
+        # Caso 1: O usuário está na fila (comum)
         if interaction.user.id in fila_jogadores:
             fila_jogadores.remove(interaction.user.id)
             await self.atualizar(interaction)
-            # A linha de send_message foi removida
+            
+        # Caso 2: Gerente clicou mas não está na fila -> Remove o 1º da fila
+        elif eh_gerente and fila_jogadores:
+            removido_id = fila_jogadores.pop(0)
+            await self.atualizar(interaction)
+            await interaction.followup.send(f"Gerente removeu <@{removido_id}> da fila. ✅", ephemeral=True)
+            
+        # Caso 3: Não está na fila e não é gerente
         else:
-            await interaction.response.send_message("Você não está na fila.", ephemeral=True)
+            await interaction.response.send_message("Você não está na fila ou não tem permissão para remover outros jogadores.", ephemeral=True)
 
     # --- BOTÃO: LIBERAR VAGA ---
     @discord.ui.button(label="Liberar Vaga 1° da Fila", style=discord.ButtonStyle.blurple, custom_id="liberar_vaga")
