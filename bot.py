@@ -45,6 +45,9 @@ async def lembrete_fatura():
         )
         
         embed.set_footer(text="©︎ Fazenda Gomes Girardi - Administração")
+        
+        # Adicionei a linha abaixo para enviar o embed que você criou:
+        await canal.send(embed=embed)
 
 @lembrete_fatura.before_loop
 async def before_lembrete():
