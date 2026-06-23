@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.ui import Button, View
 import asyncio
 import os
@@ -23,6 +23,22 @@ ID_CANAL_PAINEL = 1516284994711060631
 CARGOS_PERMITIDOS = [1281476884131090468, 1509877190995476610, 1281476884131090467]
 
 fila_jogadores = []
+
+# --- TAREFA DE LEMBRETE ---
+@tasks.loop(seconds=5) # Mantenha 5 segundos para testes!
+async def lembrete_fatura():
+    canal = bot.get_channel(1477880103039144127)
+    if canal:
+        embed = discord.Embed(
+            title="📢 Lembrete: Fatura Semanal",
+            description="Lembre-se da fatura semanal da Fazenda!\n\nProcure um Gerente ou Dono no Condado para efetuar o pagamento e manter tudo acertado com a fazenda.",
+            color=discord.Color.blue()
+        )
+        await canal.send(embed=embed)
+
+@lembrete_fatura.before_loop # <--- AJUSTE 2: Adicionado before_loop
+async def before_lembrete():
+    await bot.wait_until_ready()
 
 # --- View com o botão de LINK ---
 class BotaoLinkView(View):
@@ -157,6 +173,7 @@ async def on_guild_channel_create(channel):
 @bot.event
 async def on_ready():
     bot.add_view(PainelFilaView())
+    lembrete_fatura.start() # <--- AJUSTE 3: Inicia o lembrete aqui!
     print(f"✅ {bot.user.name} online!")
 
 @bot.command()
