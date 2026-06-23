@@ -38,7 +38,7 @@ async def lembrete_fatura():
         cor_vermelho_escuro = discord.Color.from_rgb(139, 0, 0)
         
         embed = discord.Embed(
-            title="📢 **LEMBRETE: FATURA SEMANAL**",
+            title="📢 **𝐋𝐄𝐌𝐁𝐑𝐄𝐓𝐄: 𝐅𝐀𝐓𝐔𝐑𝐀 𝐒𝐄𝐌𝐀𝐍𝐀𝐋**",
             description="**Lembre-se da Fatura Semanal da Fazenda...**\n\n\nProcure um Gerente ou Dono no Condado para Efetuar o Pagamento e Manter tudo Acertado com a Fazenda!!\n\n\n",
             color=cor_vermelho_escuro
         )
