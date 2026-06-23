@@ -106,13 +106,11 @@ class PainelFilaView(View):
         if interaction.user.id not in fila_jogadores:
             fila_jogadores.append(interaction.user.id)
             
-            # 1. Edita a mensagem do painel
+            # Use edit_message apenas UMA vez
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
             
-            # 2. Dispara o ping temporário em segundo plano
-            # Usamos o canal da interação para enviar o @here
-            asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
-            
+            # Remova o ping daqui se não for estritamente necessário, 
+            # ou garanta que ele não tente responder à interação novamente.
         else:
             await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
 
