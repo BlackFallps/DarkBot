@@ -134,7 +134,7 @@ class PainelFilaView(View):
         elif eh_gerente and fila_jogadores:
             removido_id = fila_jogadores.pop(0)
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
-            await interaction.followup.send(f"Gerente removeu <@{removido_id}> da fila. ✅", ephemeral=True)
+            await interaction.followup.send(f"Voçê Removeu <@{removido_id}> Da Fila ✅", ephemeral=True)
             
         else:
             # Mensagem mais informativa para você saber o que falhou
