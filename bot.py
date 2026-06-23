@@ -38,11 +38,10 @@ async def lembrete_fatura():
         cor_vermelho_escuro = discord.Color.from_rgb(139, 0, 0)
         
         embed = discord.Embed(
-            title="📢 | Eii, você já deixou tudo Acertado com a Fazenda?",
+            title="📢 EII, VOÇÊ JÁ DEIXOU TUDO ACERTADO COM A FAZENDA?",
             description=(
                 "Lembre-se de Verificar sua Fatura Semanal...\n\n"
-                "É muito importante manter suas obrigações em dia com a Fazenda\n\n"
-                "Procure um de nossos Gerentes ou Donos no Condado o Quanto Antes, Se você já realizou o pagamento, **desconsidere esta mensagem**. Agradecemos o seu trabalho pela Fazenda!!"
+                "Procure um de nossos Gerentes ou Donos no Condado o Quanto Antes, Se você já realizou o pagamento, **Desconsidere Esta Mensagem** Agradecemos o seu Trabalho pela Fazenda!!"
             ),
             color=cor_vermelho_escuro
         )
