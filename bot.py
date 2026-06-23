@@ -25,18 +25,24 @@ CARGOS_PERMITIDOS = [1281476884131090468, 1509877190995476610, 12814768841310904
 fila_jogadores = []
 
 # --- TAREFA DE LEMBRETE ---
-@tasks.loop(seconds=20) # Mantenha 5 segundos para testes!
+@tasks.loop(seconds=20) # Lembrar de trocar para hours=2 depois dos testes
 async def lembrete_fatura():
     canal = bot.get_channel(1477880103039144127)
     if canal:
+        # Definindo um vermelho escuro (cor personalizada)
+        cor_vermelho_escuro = discord.Color.from_rgb(139, 0, 0)
+        
         embed = discord.Embed(
-            title="📢 Lembrete: Fatura Semanal",
-            description="Lembre-se da fatura semanal da Fazenda!\n\nProcure um Gerente ou Dono no Condado para efetuar o pagamento e manter tudo acertado com a fazenda.",
-            color=discord.Color.blue()
+            # Título com emojis e negrito para maior destaque
+            title="🚨 **AVISO: FATURA SEMANAL** 🚨",
+            description="**Lembre-se da fatura semanal da Fazenda!**\n\nProcure um Gerente ou Dono no Condado para efetuar o pagamento e manter tudo acertado com a fazenda.",
+            color=cor_vermelho_escuro
         )
+        # Adiciona um rodapé profissional
+        embed.set_footer(text="Fazenda Gomes Girardi - Administração")
         await canal.send(embed=embed)
 
-@lembrete_fatura.before_loop # <--- AJUSTE 2: Adicionado before_loop
+@lembrete_fatura.before_loop
 async def before_lembrete():
     await bot.wait_until_ready()
 
