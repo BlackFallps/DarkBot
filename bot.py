@@ -38,13 +38,16 @@ async def lembrete_fatura():
         cor_vermelho_escuro = discord.Color.from_rgb(139, 0, 0)
         
         embed = discord.Embed(
-            title="📢 LEMBRETE: FATURA SEMANAL",
+            title="📢 **LEMBRETE: FATURA SEMANAL**",
             description="**Lembre-se da Fatura Semanal da Fazenda...**\n\nProcure um Gerente ou Dono no Condado para Efetuar o Pagamento e Manter tudo Acertado com a Fazenda!!",
             color=cor_vermelho_escuro
         )
         
-        embed.set_footer(text= "©︎ Fazenda Gomes Girardi - Administração")
-        await canal.send(embed=embed)
+        # O segredo: Adicionar um campo vazio com um caractere invisível
+        # Isso cria o espaçamento exato que você quer antes do rodapé
+        embed.add_field(name="\u200b", value="\u200b", inline=False)
+        
+        embed.set_footer(text="©︎ Fazenda Gomes Girardi - Administração"))
 
 @lembrete_fatura.before_loop
 async def before_lembrete():
