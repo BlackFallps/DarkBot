@@ -41,7 +41,7 @@ def carregar_fila():
             fila_jogadores = []
 
 # --- TAREFA DE LEMBRETE ---
-@tasks.loop(hours=72) 
+@tasks.loop(minutes=1) 
 async def lembrete_fatura():
     canal = bot.get_channel(1281476886232563774)
     if canal:
