@@ -53,7 +53,7 @@ async def lembrete_fatura():
     
     # Verifica se passou da data, se é múltiplo de 3 dias e se são 22:00
     if agora.date() >= data_inicio and (diferenca % 3 == 0) and agora.hour == 22 and agora.minute == 0:
-        canal = bot.get_channel(1477880103039144127)
+        canal = bot.get_channel(1281476886232563774)
         if canal:
             ping = await canal.send("||@here||")
             await asyncio.sleep(0.1) 
