@@ -87,14 +87,22 @@ class PainelFilaView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    async def enviar_log(self, interaction: discord.Interaction, acao: str, alvo: str, sucesso: bool = True):
+    async def enviar_log(self, interaction: discord.Interaction, acao: str, alvo: str, sucesso: bool = True, mostrar_alvo: bool = False):
         canal_logs = bot.get_channel(ID_CANAL_LOGS)
         if not canal_logs: return
         cor = discord.Color.green() if sucesso else discord.Color.red()
         emoji = "✅" if sucesso else "❌"
+        
         embed = discord.Embed(title=f"📋 Ação: {acao} {emoji}", color=cor)
-        embed.add_field(name="👤 Responsável", value=interaction.user.mention, inline=True)
-        embed.add_field(name="🎯 Alvo da Ação", value=alvo, inline=True)
+        
+        # Se for uma ação de gerente/dono, mostramos ambos
+        if mostrar_alvo:
+            embed.add_field(name="**👤 Gerente/Dono**", value=interaction.user.mention, inline=True)
+            embed.add_field(name="**🎯 Alvo da Ação**", value=alvo, inline=True)
+        else:
+            # Se for o próprio usuário, mostramos apenas ele
+            embed.add_field(name="**👤 Usuário**", value=alvo, inline=False)
+            
         embed.set_footer(text=f"Horário: {datetime.now().strftime('%H:%M:%S')}")
         await canal_logs.send(embed=embed)
 
@@ -125,7 +133,7 @@ class PainelFilaView(View):
             salvar_fila() # <--- ADICIONADO
             
             # LOG: ENTROU (VERDE)
-            await self.enviar_log(interaction, "Entrou na Fila", alvo=interaction.user.mention, sucesso=True)
+            await self.enviar_log(interaction, "Entrou na Fila", alvo=interaction.user.mention, sucesso=True, mostrar_alvo=False)
             
             # Edita a mensagem com a nova fila e dispara o ping
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
@@ -150,7 +158,7 @@ class PainelFilaView(View):
             salvar_fila() # <--- ADICIONADO
             
             # LOG: SAIU (VERMELHO)
-            await self.enviar_log(interaction, "Saiu da Fila", alvo=interaction.user.mention, sucesso=False)
+            await self.enviar_log(interaction, "Saiu da Fila", alvo=interaction.user.mention, sucesso=False, mostrar_alvo=False)
             
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
             asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
@@ -161,7 +169,7 @@ class PainelFilaView(View):
             salvar_fila() # <--- ADICIONADO
             
             # LOG: GERENTE RETIROU (VERMELHO)
-            await self.enviar_log(interaction, "**Gerente/Dono** Retirou da Fila", alvo=f"<@{removido_id}>", sucesso=False)
+            await self.enviar_log(interaction, "Gerente Retirou da Fila", alvo=f"<@{removido_id}>", sucesso=False, mostrar_alvo=True)
             
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
             await interaction.followup.send(f"Você Removeu <@{removido_id}> Da Fila ✅", ephemeral=True)
@@ -192,7 +200,7 @@ class PainelFilaView(View):
         salvar_fila() # <--- ADICIONADO
         
         # LOG: GERENTE LIBEROU (VERDE)
-        await self.enviar_log(interaction, "**Gerente/Dono** Liberou a Vaga", alvo=f"<@{removido_id}>", sucesso=True)
+        await self.enviar_log(interaction, "Gerente Liberou a Vaga", alvo=f"<@{removido_id}>", sucesso=True, mostrar_alvo=True)
         
         # 2. Resposta inicial editando o painel (Unificada)
         await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
