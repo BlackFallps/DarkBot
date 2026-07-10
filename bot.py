@@ -161,7 +161,7 @@ class PainelFilaView(View):
             salvar_fila() # <--- ADICIONADO
             
             # LOG: GERENTE RETIROU (VERMELHO)
-            await self.enviar_log(interaction, "Gerente Retirou da Fila", alvo=f"<@{removido_id}>", sucesso=False)
+            await self.enviar_log(interaction, "Gerente/Dono Retirou da Fila", alvo=f"<@{removido_id}>", sucesso=False)
             
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
             await interaction.followup.send(f"Você Removeu <@{removido_id}> Da Fila ✅", ephemeral=True)
@@ -192,7 +192,7 @@ class PainelFilaView(View):
         salvar_fila() # <--- ADICIONADO
         
         # LOG: GERENTE LIBEROU (VERDE)
-        await self.enviar_log(interaction, "Gerente Liberou a Vaga", alvo=f"<@{removido_id}>", sucesso=True)
+        await self.enviar_log(interaction, "Gerente/Dono Liberou a Vaga", alvo=f"<@{removido_id}>", sucesso=True)
         
         # 2. Resposta inicial editando o painel (Unificada)
         await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
