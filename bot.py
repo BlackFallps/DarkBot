@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 from discord.ui import Button, View
 import asyncio
 import os
-import json 
+import json
 from flask import Flask
 from threading import Thread
 from datetime import datetime, timezone, timedelta, date
@@ -22,6 +22,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 # --- CONFIGURAÇÃO ---
 ID_CANAL_PAINEL = 1516284994711060631
+ID_CANAL_LOGS = 1524989161638199396
 CARGOS_PERMITIDOS = [1281476884131090468, 1509877190995476610, 1281476884131090467, 1281476884131090466]
 ARQUIVO_FILA = "fila.json"
 
@@ -74,51 +75,46 @@ async def lembrete_fatura():
 @lembrete_fatura.before_loop
 async def before_lembrete():
     await bot.wait_until_ready()
-
+        
 # --- View com o botão de LINK ---
 class BotaoLinkView(View):
     def __init__(self, url):
         super().__init__(timeout=None)
         self.add_item(discord.ui.Button(label="Ir para o Painel", style=discord.ButtonStyle.link, url=url))
 
-# --- Classe do Painel ---
+# --- CLASSE DO PAINEL (LOGS + BOTÕES) ---
 class PainelFilaView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
+    async def enviar_log(self, interaction: discord.Interaction, acao: str, alvo: str, sucesso: bool = True):
+        canal_logs = bot.get_channel(ID_CANAL_LOGS)
+        if not canal_logs: return
+        cor = discord.Color.green() if sucesso else discord.Color.red()
+        emoji = "✅" if sucesso else "❌"
+        embed = discord.Embed(title=f"📋 Ação: {acao} {emoji}", color=cor)
+        embed.add_field(name="👤 Responsável", value=interaction.user.mention, inline=True)
+        embed.add_field(name="🎯 Alvo da Ação", value=alvo, inline=True)
+        embed.set_footer(text=f"Horário: {datetime.now().strftime('%H:%M:%S')}")
+        await canal_logs.send(embed=embed)
+
     def gerar_embed(self):
-        embed = discord.Embed(
-            title="🌾 FILA DA FAZENDA GOMES GIRARDI 🌾",
-            description="Clique nos Botões Abaixo Para Gerenciar sua Vaga na Fila!",
-            color=discord.Color.brand_green()
-        )
+        embed = discord.Embed(title="🌾 FILA DA FAZENDA GOMES GIRARDI 🌾", description="Clique nos Botões Abaixo Para Gerenciar sua Vaga na Fila!", color=discord.Color.brand_green())
         embed.set_thumbnail(url="https://r2.fivemanage.com/W9vFnvRHli5f57dMM8AKy/FazendaGomes.png")
-        
         if fila_jogadores:
-            lista_formatada = []
-            for i, jogador_id in enumerate(fila_jogadores):
-                mention = f"<@{jogador_id}>"
-                if i == 0:
-                    lista_formatada.append(f"🥇 **{mention}** *(Próximo a Ser Contratado)*")
-                else:
-                    lista_formatada.append(f"{i+1}. {mention}")
+            lista_formatada = [f"🥇 **<@{fila_jogadores[0]}>** *(Próximo a Ser Contratado)*" if i == 0 else f"{i+1}. <@{jogador_id}>" for i, jogador_id in enumerate(fila_jogadores)]
             embed.add_field(name="Jogadores na Fila", value="\n".join(lista_formatada), inline=False)
         else:
             embed.add_field(name="Jogadores na Fila", value="*Ninguém na Fila por Enquanto.*", inline=False)
         embed.set_footer(text=f"Total: {len(fila_jogadores)}")
         return embed
 
-    async def atualizar(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
-        asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
-
     async def enviar_ping_temporario(self, channel):
         try:
             ping = await channel.send("||@here||")
             await asyncio.sleep(0.1)
             await ping.delete()
-        except Exception as e:
-            print(f"Erro ao processar ping: {e}")
+        except: pass
 
     # --- BOTÃO: ENTRAR ---
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila_novo")
@@ -128,14 +124,17 @@ class PainelFilaView(View):
             fila_jogadores.append(interaction.user.id)
             salvar_fila() # <--- ADICIONADO
             
+            # LOG: ENTROU (VERDE)
+            await self.enviar_log(interaction, "Entrou na Fila", alvo=interaction.user.mention, sucesso=True)
+            
             # Edita a mensagem com a nova fila e dispara o ping
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
             asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
         else:
             # Usuário já está na fila, apenas avisa sem atualizar tudo
-            await interaction.response.send_message("⚠️ Você já está na fila!", ephemeral=True)
+            await interaction.response.send_message("Você Já Está na Fila ⚠️", ephemeral=True)
 
-   # --- BOTÃO: SAIR ---
+    # --- BOTÃO: SAIR ---
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila_novo")
     async def sair(self, interaction: discord.Interaction, button: Button):
         # 1. Verifica IDs dos cargos
@@ -149,6 +148,10 @@ class PainelFilaView(View):
         if interaction.user.id in fila_jogadores:
             fila_jogadores.remove(interaction.user.id)
             salvar_fila() # <--- ADICIONADO
+            
+            # LOG: SAIU (VERMELHO)
+            await self.enviar_log(interaction, "Saiu da Fila", alvo=interaction.user.mention, sucesso=False)
+            
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
             asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
 
@@ -156,6 +159,10 @@ class PainelFilaView(View):
         elif eh_gerente and fila_jogadores:
             removido_id = fila_jogadores.pop(0)
             salvar_fila() # <--- ADICIONADO
+            
+            # LOG: GERENTE RETIROU (VERMELHO)
+            await self.enviar_log(interaction, "Gerente Retirou da Fila", alvo=f"<@{removido_id}>", sucesso=False)
+            
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
             await interaction.followup.send(f"Você Removeu <@{removido_id}> Da Fila ✅", ephemeral=True)
             # Dispara o ping em segundo plano
@@ -184,6 +191,9 @@ class PainelFilaView(View):
         removido_id = fila_jogadores.pop(0)
         salvar_fila() # <--- ADICIONADO
         
+        # LOG: GERENTE LIBEROU (VERDE)
+        await self.enviar_log(interaction, "Gerente Liberou a Vaga", alvo=f"<@{removido_id}>", sucesso=True)
+        
         # 2. Resposta inicial editando o painel (Unificada)
         await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
         
@@ -200,7 +210,6 @@ class PainelFilaView(View):
             
         # 5. Notificação de sucesso para o Gerente
         await interaction.followup.send(f"Vaga de <@{removido_id}> Liberado Com Sucesso ✅", ephemeral=True)
-
 # --- Eventos ---
 @bot.event
 async def on_guild_channel_create(channel):
