@@ -165,10 +165,12 @@ class PainelFilaView(View):
 
         # Caso 2: Gerente clicou mas não está na fila -> Remove o 1º da fila
         elif eh_gerente and fila_jogadores:
+            # O pop(0) remove o ID da lista independentemente de o usuário existir no servidor
             removido_id = fila_jogadores.pop(0)
             salvar_fila()
             
             # LOG: GERENTE RETIROU (VERMELHO)
+            # O f"<@{removido_id}>" funciona mesmo se o usuário não estiver mais lá
             await self.enviar_log(interaction, "Gerente Retirou da Fila", alvo=f"<@{removido_id}>", sucesso=False, mostrar_alvo=True)
             
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
@@ -179,7 +181,7 @@ class PainelFilaView(View):
         # Caso 3: Não está na fila e não é gerente
         else:
             await interaction.response.send_message(
-                f"DEBUG: Admin={eh_admin}, CargoPermitido={tem_cargo}. Você não está na fila ou não tem permissão.", 
+                "Ação não permitida: Você não está na fila ou a fila está vazia.", 
                 ephemeral=True
             )
 
@@ -234,6 +236,24 @@ async def on_guild_channel_create(channel):
         )
         await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
 
+# --- EVENTO PARA REMOVER DA FILA AO SAIR DO SERVIDOR ---
+@bot.event
+async def on_member_remove(member):
+    global fila_jogadores
+    if member.id in fila_jogadores:
+        fila_jogadores.remove(member.id)
+        salvar_fila()
+        
+        # Opcional: Envia um log informando a saída automática
+        canal_logs = bot.get_channel(ID_CANAL_LOGS)
+        if canal_logs:
+            embed = discord.Embed(
+                title="Remoção Automática 🔄",
+                description=f"O Jogador {member.mention} Saiu do Servidor e Foi Removido Automaticamente da Fila De Espera!!",
+                color=discord.Color.orange()
+            )
+            await canal_logs.send(embed=embed)
+            
 @bot.event
 async def on_ready():
     carregar_fila()
