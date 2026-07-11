@@ -101,7 +101,7 @@ class PainelFilaView(View):
             embed.add_field(name="**🎯 Alvo da Ação**", value=alvo, inline=True)
         else:
             # Se for o próprio usuário, mostramos apenas ele
-            embed.add_field(name="**👤 Usuário**", value=alvo, inline=False)
+            embed.add_field(name="**👤 Jogador(a)**", value=alvo, inline=False)
             
         embed.set_footer(text=f"Horário: {datetime.now().strftime('%H:%M:%S')}")
         await canal_logs.send(embed=embed)
