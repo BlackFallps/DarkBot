@@ -163,25 +163,27 @@ class PainelFilaView(View):
             await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
             asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
 
-        # Caso 2: Gerente clicou mas não está na fila -> Remove o 1º da fila
-        elif eh_gerente and fila_jogadores:
-            # O pop(0) remove o ID da lista independentemente de o usuário existir no servidor
-            removido_id = fila_jogadores.pop(0)
-            salvar_fila()
-            
-            # LOG: GERENTE RETIROU (VERMELHO)
-            # O f"<@{removido_id}>" funciona mesmo se o usuário não estiver mais lá
-            await self.enviar_log(interaction, "Gerente Retirou da Fila", alvo=f"<@{removido_id}>", sucesso=False, mostrar_alvo=True)
-            
-            await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
-            await interaction.followup.send(f"Você Removeu <@{removido_id}> Da Fila ✅", ephemeral=True)
-            # Dispara o ping em segundo plano
-            asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
+        # Caso 2: Gerente (ou Admin) pode remover o 1º da fila
+        elif eh_gerente:
+            if fila_jogadores:
+                # O pop(0) remove o ID da lista independentemente de o usuário existir no servidor
+                removido_id = fila_jogadores.pop(0)
+                salvar_fila()
+                
+                # LOG: GERENTE RETIROU (VERMELHO)
+                await self.enviar_log(interaction, "Gerente Retirou da Fila", alvo=f"<@{removido_id}>", sucesso=False, mostrar_alvo=True)
+                
+                await interaction.response.edit_message(embed=self.gerar_embed(), view=self)
+                await interaction.followup.send(f"Você Removeu <@{removido_id}> Da Fila ✅", ephemeral=True)
+                # Dispara o ping em segundo plano
+                asyncio.create_task(self.enviar_ping_temporario(interaction.channel))
+            else:
+                await interaction.response.send_message("A fila está vazia.", ephemeral=True)
             
         # Caso 3: Não está na fila e não é gerente
         else:
             await interaction.response.send_message(
-                "Ação não permitida: Você não está na fila ou a fila está vazia.", 
+                "Ação não permitida: Você não está na fila ou não tem permissão de Gerente.", 
                 ephemeral=True
             )
 
