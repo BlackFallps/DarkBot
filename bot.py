@@ -155,7 +155,7 @@ class PainelFilaView(View):
         # Caso 1: O usuário está na fila (comum)
         if interaction.user.id in fila_jogadores:
             fila_jogadores.remove(interaction.user.id)
-            salvar_fila() # <--- ADICIONADO
+            salvar_fila()
             
             # LOG: SAIU (VERMELHO)
             await self.enviar_log(interaction, "Saiu da Fila", alvo=interaction.user.mention, sucesso=False, mostrar_alvo=False)
@@ -166,7 +166,7 @@ class PainelFilaView(View):
         # Caso 2: Gerente clicou mas não está na fila -> Remove o 1º da fila
         elif eh_gerente and fila_jogadores:
             removido_id = fila_jogadores.pop(0)
-            salvar_fila() # <--- ADICIONADO
+            salvar_fila()
             
             # LOG: GERENTE RETIROU (VERMELHO)
             await self.enviar_log(interaction, "Gerente Retirou da Fila", alvo=f"<@{removido_id}>", sucesso=False, mostrar_alvo=True)
