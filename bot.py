@@ -145,11 +145,12 @@ class PainelFilaView(View):
     # --- BOTÃO: SAIR ---
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila_novo")
     async def sair(self, interaction: discord.Interaction, button: Button):
-        # 1. Verifica IDs dos cargos
+        # --- ADICIONE ESTA LINHA PARA FORÇAR A LEITURA DO ARQUIVO ---
+        carregar_fila() 
+        
         cargos_usuario = [role.id for role in interaction.user.roles]
         eh_admin = interaction.user.guild_permissions.administrator
         tem_cargo = any(role_id in CARGOS_PERMITIDOS for role_id in cargos_usuario)
-        
         eh_gerente = eh_admin or tem_cargo
         
         # Caso 1: O usuário está na fila (comum)
