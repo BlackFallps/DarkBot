@@ -252,7 +252,7 @@ async def on_member_remove(member):
         canal_logs = bot.get_channel(ID_CANAL_LOGS)
         if canal_logs:
             embed = discord.Embed(
-                title="Remoção Automática 🔄",
+                title="**Remoção Automática 🔄**",
                 description=f"O Jogador {member.mention} Saiu do Servidor e Foi Removido Automaticamente da Fila De Espera!!",
                 color=discord.Color.orange()
             )
