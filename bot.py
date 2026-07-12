@@ -184,7 +184,7 @@ class PainelFilaView(View):
         # Caso 3: Não está na fila e não é gerente
         else:
             await interaction.response.send_message(
-                "Ação não permitida: Você não está na fila ou não tem permissão de Gerente.", 
+                "Ação não Permitido: Você Não Está na Fila ou Não tem Permissão de Gerente/Dono", 
                 ephemeral=True
             )
 
@@ -223,6 +223,24 @@ class PainelFilaView(View):
             
         # 5. Notificação de sucesso para o Gerente
         await interaction.followup.send(f"Vaga de <@{removido_id}> Liberado Com Sucesso ✅", ephemeral=True)
+
+# --- LIMPAR FILA !LIMPARFILA ---
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def limparfila(ctx):
+    global fila_jogadores
+    novos_ids = []
+    
+    # Verifica um por um buscando no cache do bot
+    for uid in fila_jogadores:
+        member = ctx.guild.get_member(uid)
+        if member is not None:
+            novos_ids.append(uid)
+            
+    fila_jogadores = novos_ids
+    salvar_fila()
+    await ctx.send(f"🧹 **Fila limpa!** Agora restam {len(fila_jogadores)} jogadores.")
+    
 # --- Eventos ---
 @bot.event
 async def on_guild_channel_create(channel):
@@ -239,16 +257,6 @@ async def on_guild_channel_create(channel):
         )
         await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
 
-# --- COMANDO PRA LIMPAR A FILA !LIMPARFILA ---
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def limparfila(ctx):
-    global fila_jogadores
-    # Isso remove da memória qualquer um que não esteja mais no servidor
-    fila_jogadores = [uid for uid in fila_jogadores if ctx.guild.get_member(uid) is not None]
-    salvar_fila()
-    await ctx.send("**Fila Limpa!** IDs Inválidos Foram Removidos 🧹")
-    
 # --- EVENTO PARA REMOVER DA FILA AO SAIR DO SERVIDOR ---
 @bot.event
 async def on_member_remove(member):
