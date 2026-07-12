@@ -239,6 +239,16 @@ async def on_guild_channel_create(channel):
         )
         await channel.send(embed=embed, view=BotaoLinkView(url), delete_after=60)
 
+# --- COMANDO PRA LIMPAR A FILA !LIMPARFILA ---
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def limparfila(ctx):
+    global fila_jogadores
+    # Isso remove da memória qualquer um que não esteja mais no servidor
+    fila_jogadores = [uid for uid in fila_jogadores if ctx.guild.get_member(uid) is not None]
+    salvar_fila()
+    await ctx.send("**Fila Limpa!** IDs Inválidos Foram Removidos 🧹")
+    
 # --- EVENTO PARA REMOVER DA FILA AO SAIR DO SERVIDOR ---
 @bot.event
 async def on_member_remove(member):
