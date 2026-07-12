@@ -223,24 +223,7 @@ class PainelFilaView(View):
             
         # 5. Notificação de sucesso para o Gerente
         await interaction.followup.send(f"Vaga de <@{removido_id}> Liberado Com Sucesso ✅", ephemeral=True)
-
-# --- LIMPAR FILA !LIMPARFILA ---
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def limparfila(ctx):
-    global fila_jogadores
-    novos_ids = []
-    
-    # Verifica um por um buscando no cache do bot
-    for uid in fila_jogadores:
-        member = ctx.guild.get_member(uid)
-        if member is not None:
-            novos_ids.append(uid)
-            
-    fila_jogadores = novos_ids
-    salvar_fila()
-    await ctx.send(f"🧹 **Fila limpa!** Agora restam {len(fila_jogadores)} jogadores.")
-    
+   
 # --- Eventos ---
 @bot.event
 async def on_guild_channel_create(channel):
