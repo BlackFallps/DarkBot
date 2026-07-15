@@ -25,6 +25,7 @@ ID_CANAL_PAINEL = 1516284994711060631
 ID_CANAL_LOGS = 1524989161638199396
 CARGOS_PERMITIDOS = [1281476884131090468, 1509877190995476610, 1281476884131090467, 1281476884131090466]
 ARQUIVO_FILA = "fila.json"
+ARQUIVO_ID_LEMBRETE = "lembrete_id.json"
 
 # --- LISTA E PERSISTÊNCIA ---
 fila_jogadores = []
@@ -42,6 +43,17 @@ def carregar_fila():
         except:
             fila_jogadores = []
 
+def salvar_id_lembrete(mensagem_id):
+    with open(ARQUIVO_ID_LEMBRETE, "w") as f:
+        json.dump({"id": mensagem_id}, f)
+
+def carregar_id_lembrete():
+    if os.path.exists(ARQUIVO_ID_LEMBRETE):
+        with open(ARQUIVO_ID_LEMBRETE, "r") as f:
+            try: return json.load(f).get("id")
+            except: return None
+    return None
+
    # --- TAREFA DE LEMBRETE (A CADA 3 DIAS, ÀS 22:00, COMEÇANDO EM 26/06/2026) ---
 @tasks.loop(minutes=1) 
 async def lembrete_fatura():
@@ -56,6 +68,15 @@ async def lembrete_fatura():
     if agora.date() >= data_inicio and (diferenca % 3 == 0) and agora.hour == 22 and agora.minute == 0:
         canal = bot.get_channel(1281476886232563774)
         if canal:
+            # Apaga lembrete anterior, se existir
+            ultimo_id = carregar_id_lembrete()
+            if ultimo_id:
+                try:
+                    msg_antiga = await canal.fetch_message(ultimo_id)
+                    await msg_antiga.delete()
+                except:
+                    pass
+            
             ping = await canal.send("||@here||")
             await asyncio.sleep(0.1) 
             await ping.delete()      
@@ -70,7 +91,10 @@ async def lembrete_fatura():
                 color=cor_vermelho_escuro
             )
             embed.set_footer(text="© Fazenda Gomes Girardi - Administração")
-            await canal.send(embed=embed)
+            
+            # Envia o novo e salva o ID
+            nova_msg = await canal.send(embed=embed)
+            salvar_id_lembrete(nova_msg.id)
 
 @lembrete_fatura.before_loop
 async def before_lembrete():
