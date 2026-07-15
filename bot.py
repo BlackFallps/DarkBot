@@ -131,6 +131,7 @@ class PainelFilaView(View):
         await canal_logs.send(embed=embed)
 
     def gerar_embed(self):
+        carregar_fila() 
         embed = discord.Embed(title="🌾 FILA DA FAZENDA GOMES GIRARDI 🌾", description="Clique nos Botões Abaixo Para Gerenciar sua Vaga na Fila!", color=discord.Color.brand_green())
         embed.set_thumbnail(url="https://r2.fivemanage.com/W9vFnvRHli5f57dMM8AKy/FazendaGomes.png")
         if fila_jogadores:
@@ -151,10 +152,11 @@ class PainelFilaView(View):
     # --- BOTÃO: ENTRAR ---
     @discord.ui.button(label="Entrar na Fila", style=discord.ButtonStyle.green, custom_id="entrar_fila_novo")
     async def entrar(self, interaction: discord.Interaction, button: Button):
+        carregar_fila() 
         if interaction.user.id not in fila_jogadores:
             # Ação de entrar na fila
             fila_jogadores.append(interaction.user.id)
-            salvar_fila() # <--- ADICIONADO
+            salvar_fila() 
             
             # LOG: ENTROU (VERDE)
             await self.enviar_log(interaction, "Entrou na Fila", alvo=interaction.user.mention, sucesso=True, mostrar_alvo=False)
