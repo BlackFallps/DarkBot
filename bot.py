@@ -171,17 +171,19 @@ class PainelFilaView(View):
     # --- BOTÃO: SAIR ---
     @discord.ui.button(label="Sair da Fila", style=discord.ButtonStyle.red, custom_id="sair_fila_novo")
     async def sair(self, interaction: discord.Interaction, button: Button):
-        # --- ADICIONE ESTA LINHA PARA FORÇAR A LEITURA DO ARQUIVO ---
         carregar_fila() 
+        
+        # Converte o ID do usuário para inteiro para garantir compatibilidade
+        user_id = int(interaction.user.id)
         
         cargos_usuario = [role.id for role in interaction.user.roles]
         eh_admin = interaction.user.guild_permissions.administrator
         tem_cargo = any(role_id in CARGOS_PERMITIDOS for role_id in cargos_usuario)
         eh_gerente = eh_admin or tem_cargo
         
-        # Caso 1: O usuário está na fila (comum)
-        if interaction.user.id in fila_jogadores:
-            fila_jogadores.remove(interaction.user.id)
+        # Caso 1: O usuário está na fila (comum) - Usamos user_id (int)
+        if user_id in fila_jogadores:
+            fila_jogadores.remove(user_id)
             salvar_fila()
             
             # LOG: SAIU (VERMELHO)
@@ -210,7 +212,7 @@ class PainelFilaView(View):
         # Caso 3: Não está na fila e não é gerente
         else:
             await interaction.response.send_message(
-                "Ação não Permitido: Você Não Está na Fila ou Não tem Permissão de Gerente/Dono", 
+                "Ação não Permitida: Você Não Está na Fila ou Não tem Permissão de Gerente/Dono", 
                 ephemeral=True
             )
 
